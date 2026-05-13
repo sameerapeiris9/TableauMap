@@ -160,82 +160,68 @@ function render(data){
         return;
     }
 
-    /* AUTO DETECT FIELDS */
+    /*
+    =====================================
+    IMPORTANT:
+    USE THESE EXACT FIELD NAMES
+    IN TABLEAU
+    =====================================
 
-    const sample = data[0];
+    branch
+    latitude
+    longitude
+    balance
+    limit
 
-    const keys = Object.keys(sample);
-
-    console.log("FIELDS:", keys);
-
-    const latField = keys.find(k =>
-        k.toLowerCase().includes('lat')
-    );
-
-    const lngField = keys.find(k =>
-        k.toLowerCase().includes('long') ||
-        k.toLowerCase().includes('lng') ||
-        k.toLowerCase().includes('loan')
-    );
-
-    const branchField = keys.find(k =>
-        k.toLowerCase().includes('branch')
-    );
-
-    const balanceField = keys.find(k =>
-        k.toLowerCase().includes('ttl') ||
-        k.toLowerCase().includes('balance')
-    );
-
-    const limitField = keys.find(k =>
-        k.toLowerCase().includes('limit')
-    );
-
-    console.log({
-        latField,
-        lngField,
-        branchField,
-        balanceField,
-        limitField
-    });
+    =====================================
+    */
 
     const processed = data.map(d => {
 
         return {
 
             branch:
-                branchField && d[branchField]
-                    ? d[branchField].formattedValue
-                    : 'Unknown',
+                d["branch"]
+                    ? d["branch"].formattedValue
+                    : "Unknown",
 
             lat:
-                latField && d[latField]
-                    ? Number(d[latField].nativeValue)
+                d["latitude"]
+                    ? Number(d["latitude"].nativeValue)
                     : NaN,
 
             lng:
-                lngField && d[lngField]
-                    ? Number(d[lngField].nativeValue)
+                d["longitude"]
+                    ? Number(d["longitude"].nativeValue)
                     : NaN,
 
             balance:
-                balanceField && d[balanceField]
-                    ? Number(d[balanceField].nativeValue)
+                d["balance"]
+                    ? Number(d["balance"].nativeValue)
                     : 0,
 
             limit:
-                limitField && d[limitField]
-                    ? Number(d[limitField].nativeValue)
+                d["limit"]
+                    ? Number(d["limit"].nativeValue)
                     : 0
         };
     });
 
     console.log("PROCESSED:", processed);
 
-    const valid = processed.filter(d =>
-        !isNaN(d.lat) &&
-        !isNaN(d.lng)
-    );
+    /* VALID SRI LANKA COORDINATES */
+
+    const valid = processed.filter(d => {
+
+        return (
+            !isNaN(d.lat) &&
+            !isNaN(d.lng) &&
+            d.lat >= 5 &&
+            d.lat <= 11 &&
+            d.lng >= 79 &&
+            d.lng <= 82
+        );
+    });
 
     document.getElementById('count').innerText = valid.length;
 
