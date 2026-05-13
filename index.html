@@ -139,8 +139,8 @@ function render(data, enc){
         const icon = L.divIcon({
             className:'',
             html:`<div class="marker" style="background:${color}">${symbol}</div>`,
-            iconSize:[7],
-            iconAnchor:[8]
+            iconSize: [11],
+            iconAnchor: [12]
         });
         
         const marker = L.marker([d.lat,d.lng], { icon }).addTo(layer);
@@ -153,7 +153,7 @@ function render(data, enc){
     });
     
     if(bounds.length){
-        map.fitBounds(bounds,{ padding:[9] });
+        map.fitBounds(bounds,{ padding: [13] });
     }
 }
 
