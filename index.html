@@ -1,10 +1,1022 @@
 <!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>ComBank Branch Intelligence Map</title>
+
+<!-- TABLEAU -->
+<script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+
+<!-- LEAFLET -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+html,
+body{
+
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+
+    background:#07131f;
+
+    font-family:
+        Inter,
+        Segoe UI,
+        Arial,
+        sans-serif;
+}
+
+#map{
+
+    width:100%;
+    height:100%;
+}
+
+/* =====================================================
+   MAP
+===================================================== */
+
+.leaflet-container{
+
+    background:#07131f;
+}
+
+.leaflet-control-attribution{
+
+    display:none !important;
+}
+
+/* =====================================================
+   PERFORMANCE
+===================================================== */
+
+.leaflet-pane,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile{
+
+    will-change:auto !important;
+}
+
+.leaflet-fade-anim .leaflet-popup{
+
+    transition:none !important;
+}
+
+/* =====================================================
+   OVERLAY
+===================================================== */
+
+.map-gradient{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+    z-index:300;
+
+    background:
+
+        radial-gradient(
+            circle at top left,
+            rgba(0,194,255,.14),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at bottom right,
+            rgba(16,216,118,.10),
+            transparent 28%
+        );
+}
+
+/* =====================================================
+   GLASS
+===================================================== */
+
+.glass{
+
+    background:
+        rgba(5,16,28,.78);
+
+    backdrop-filter:
+        blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    box-shadow:
+        0 8px 28px rgba(0,0,0,.30);
+}
+
+/* =====================================================
+   PANEL
+===================================================== */
+
+.dashboard-panel{
+
+    position:absolute;
+
+    top:14px;
+    left:14px;
+
+    width:220px;
+
+    z-index:9999;
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+.panel-header{
+
+    padding:18px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.06);
+}
+
+.panel-title{
+
+    color:white;
+
+    font-size:18px;
+    font-weight:700;
+
+    margin-bottom:6px;
+}
+
+.panel-subtitle{
+
+    color:rgba(255,255,255,.55);
+
+    font-size:12px;
+}
+
+.panel-body{
+
+    padding:18px;
+}
+
+.legend-row{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin-bottom:14px;
+}
+
+.legend-left{
+
+    display:flex;
+    align-items:center;
+}
+
+.legend-dot{
+
+    width:10px;
+    height:10px;
+
+    border-radius:50%;
+
+    margin-right:10px;
+}
+
+.dot-ok{
+
+    background:#10d876;
+}
+
+.dot-alert{
+
+    background:#ff4d67;
+}
+
+.legend-label{
+
+    color:rgba(255,255,255,.84);
+
+    font-size:13px;
+}
+
+.legend-value{
+
+    color:white;
+
+    font-size:13px;
+    font-weight:700;
+}
+
+.divider{
+
+    height:1px;
+
+    background:
+        rgba(255,255,255,.06);
+
+    margin:16px 0;
+}
+
+/* =====================================================
+   MARKERS
+===================================================== */
+
+.branch-marker{
+
+    width:10px;
+    height:10px;
+
+    border-radius:50%;
+
+    border:2px solid rgba(255,255,255,.92);
+
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,.18);
+}
+
+.marker-ok{
+
+    background:#10d876;
+}
+
+.marker-alert{
+
+    background:#ff4d67;
+}
+
+/* =====================================================
+   POPUP
+===================================================== */
+
+.leaflet-popup-content-wrapper{
+
+    background:
+        rgba(7,19,33,.96) !important;
+
+    border-radius:22px;
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    box-shadow:
+        0 18px 55px rgba(0,0,0,.38);
+
+    padding:0;
+}
+
+.leaflet-popup-tip{
+
+    background:
+        rgba(7,19,33,.96) !important;
+}
+
+.leaflet-popup-content{
+
+    margin:0 !important;
+
+    width:340px !important;
+}
+
+.popup-card{
+
+    padding:22px;
+}
+
+.popup-top{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+
+    margin-bottom:20px;
+}
+
+.branch-name{
+
+    color:white;
+
+    font-size:22px;
+    font-weight:700;
+
+    line-height:1.25;
+
+    margin-bottom:10px;
+}
+
+.branch-status{
+
+    display:inline-flex;
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:11px;
+    font-weight:700;
+}
+
+.status-ok{
+
+    background:
+        rgba(16,216,118,.14);
+
+    color:#10d876;
+}
+
+.status-alert{
+
+    background:
+        rgba(255,77,103,.14);
+
+    color:#ff4d67;
+}
+
+.util-box{
+
+    width:70px;
+    height:70px;
+
+    border-radius:50%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid rgba(255,255,255,.05);
+}
+
+.util-number{
+
+    color:white;
+
+    font-size:16px;
+    font-weight:700;
+}
+
+.util-label{
+
+    color:rgba(255,255,255,.55);
+
+    font-size:9px;
+
+    margin-top:2px;
+}
+
+.kpi-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+
+    margin-bottom:18px;
+}
+
+.kpi-card{
+
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid rgba(255,255,255,.05);
+
+    border-radius:16px;
+
+    padding:16px;
+}
+
+.kpi-label{
+
+    color:rgba(255,255,255,.55);
+
+    font-size:11px;
+
+    margin-bottom:10px;
+
+    text-transform:uppercase;
+}
+
+.kpi-currency{
+
+    color:rgba(255,255,255,.45);
+
+    font-size:10px;
+
+    margin-bottom:6px;
+}
+
+.kpi-value{
+
+    color:white;
+
+    font-size:20px;
+    font-weight:700;
+}
+
+.progress-track{
+
+    width:100%;
+    height:8px;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+    background:
+        rgba(255,255,255,.06);
+}
+
+.progress-fill{
+
+    height:100%;
+
+    border-radius:999px;
+}
+
+.fill-ok{
+
+    background:
+        linear-gradient(
+            90deg,
+            #10d876,
+            #00c2ff
+        );
+}
+
+.fill-alert{
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff4d67,
+            #ff7b54
+        );
+}
+
+/* =====================================================
+   ZOOM
+===================================================== */
+
+.leaflet-control-zoom{
+
+    border:none !important;
+
+    border-radius:16px !important;
+
+    overflow:hidden;
+
+    margin-top:14px !important;
+    margin-right:14px !important;
+}
+
+.leaflet-control-zoom a{
+
+    width:36px !important;
+    height:36px !important;
+
+    line-height:36px !important;
+
+    border:none !important;
+
+    background:
+        rgba(255,255,255,.95) !important;
+
+    color:#0f172a !important;
+
+    font-size:20px !important;
+}
+
+.leaflet-control-zoom a:hover{
+
+    background:#00c2ff !important;
+
+    color:white !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div class="map-gradient"></div>
+
+<!-- =====================================================
+     PANEL
+===================================================== -->
+
+<div class="dashboard-panel glass">
+
+    <div class="panel-header">
+
+        <div class="panel-title">
+            Branch Intelligence
+        </div>
+
+        <div class="panel-subtitle">
+            Real-time monitoring
+        </div>
+
+    </div>
+
+    <div class="panel-body">
+
+        <div class="legend-row">
+
+            <div class="legend-left">
+                <div class="legend-dot dot-ok"></div>
+
+                <div class="legend-label">
+                    Healthy
+                </div>
+            </div>
+
+            <div class="legend-value"
+                 id="healthyCount">
+                0
+            </div>
+
+        </div>
+
+        <div class="legend-row">
+
+            <div class="legend-left">
+                <div class="legend-dot dot-alert"></div>
+
+                <div class="legend-label">
+                    Risk
+                </div>
+            </div>
+
+            <div class="legend-value"
+                 id="riskCount">
+                0
+            </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="legend-row">
+
+            <div class="legend-label">
+                Total Branches
+            </div>
+
+            <div class="legend-value"
+                 id="totalBranches">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let worksheet;
+let map;
+let layer;
+
+/* =====================================================
+   MAP
+===================================================== */
+
+function initMap(){
+
+    map = L.map('map',{
+
+        center:[7.8731,80.7718],
+        zoom:8,
+
+        preferCanvas:true,
+
+        fadeAnimation:false,
+        markerZoomAnimation:false,
+
+        zoomControl:true,
+        attributionControl:false,
+
+        renderer:L.canvas()
+    });
+
+    /* FAST DARK MAP */
+
+    L.tileLayer(
+
+        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+
+        {
+            maxZoom:18,
+            updateWhenIdle:true,
+            keepBuffer:2
+        }
+
+    ).addTo(map);
+
+    /* LABELS */
+
+    L.tileLayer(
+
+        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+
+        {
+            pane:'overlayPane'
+        }
+
+    ).addTo(map);
+
+    layer = L.layerGroup().addTo(map);
+}
+
+/* =====================================================
+   MONEY
+===================================================== */
+
+function money(v){
+
+    return new Intl.NumberFormat(
+
+        'en-LK',
+
+        {
+            style:'currency',
+            currency:'LKR',
+            maximumFractionDigits:0
+        }
+
+    ).format(v);
+}
+
+/* =====================================================
+   TABLEAU PARAMETER
+===================================================== */
+
+async function setSelectedBranchParameter(branchCode){
+
+    try{
+
+        const dashboard =
+            tableau.extensions.dashboardContent.dashboard;
+
+        const parameters =
+            await dashboard.getParametersAsync();
+
+        const parameter = parameters.find(p =>
+            p.name === "Selected Branch code"
+        );
+
+        if(parameter){
+
+            await parameter.changeValueAsync(
+                branchCode
+            );
+
+            console.log(
+                "Parameter Updated:",
+                branchCode
+            );
+        }
+
     }catch(error){
 
         console.error(
-            'Parameter Update Error:',
+            "Parameter Update Failed:",
             error
         );
+    }
+}
+
+/* =====================================================
+   DATA
+===================================================== */
+
+async function getSummaryDataTable(ws){
+
+    let rows = [];
+
+    const reader =
+        await ws.getSummaryDataReaderAsync(
+            undefined,
+            { ignoreSelection:true }
+        );
+
+    for(let i=0; i<reader.pageCount; i++){
+
+        const page =
+            await reader.getPageAsync(i);
+
+        rows = rows.concat(
+
+            page.data.map(r => {
+
+                const row = {};
+
+                page.columns.forEach((col,idx)=>{
+
+                    row[col.fieldName] = r[idx];
+
+                });
+
+                return row;
+            })
+        );
+    }
+
+    await reader.releaseAsync();
+
+    return rows;
+}
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render(data){
+
+    layer.clearLayers();
+
+    if(!data.length){
+        return;
+    }
+
+    const sample = data[0];
+
+    const keys = Object.keys(sample);
+
+    const branchField = keys.find(k =>
+        k.toLowerCase() === 'branch'
+    );
+
+    const branchCodeField = keys.find(k =>
+        k.toLowerCase().includes('branch code') ||
+        k.toLowerCase().includes('branchcode')
+    );
+
+    const latField = keys.find(k =>
+        k.toLowerCase() === 'latitude'
+    );
+
+    const lngField = keys.find(k =>
+        k.toLowerCase() === 'longitude'
+    );
+
+    const balanceField = keys.find(k =>
+        k.toLowerCase().includes('balance')
+    );
+
+    const limitField = keys.find(k =>
+        k.toLowerCase().includes('limit')
+    );
+
+    let healthy = 0;
+    let risk = 0;
+
+    const bounds = [];
+
+    for(let i=0; i<data.length; i++){
+
+        const d = data[i];
+
+        const branch =
+            branchField && d[branchField]
+                ? d[branchField].formattedValue
+                : 'Unknown';
+
+        const branchCode =
+            branchCodeField && d[branchCodeField]
+                ? d[branchCodeField].formattedValue
+                : '';
+
+        const lat =
+            latField && d[latField]
+                ? Number(d[latField].nativeValue)
+                : NaN;
+
+        const lng =
+            lngField && d[lngField]
+                ? Number(d[lngField].nativeValue)
+                : NaN;
+
+        const balance =
+            balanceField && d[balanceField]
+                ? Number(d[balanceField].nativeValue)
+                : 0;
+
+        const limit =
+            limitField && d[limitField]
+                ? Number(d[limitField].nativeValue)
+                : 0;
+
+        if(
+            isNaN(lat) ||
+            isNaN(lng)
+        ){
+            continue;
+        }
+
+        const over = balance > limit;
+
+        if(over){
+            risk++;
+        }else{
+            healthy++;
+        }
+
+        const utilization =
+            limit > 0
+                ? ((balance / limit) * 100).toFixed(1)
+                : 0;
+
+        const markerClass =
+            over
+                ? 'marker-alert'
+                : 'marker-ok';
+
+        const statusClass =
+            over
+                ? 'status-alert'
+                : 'status-ok';
+
+        const fillClass =
+            over
+                ? 'fill-alert'
+                : 'fill-ok';
+
+        const statusText =
+            over
+                ? 'Over Limit'
+                : 'Healthy';
+
+        const icon = L.divIcon({
+
+            className:'',
+
+            html:`
+                <div class="branch-marker ${markerClass}"></div>
+            `,
+
+            iconSize:[10,10],
+            iconAnchor:[5,5]
+        });
+
+        const marker = L.marker(
+
+            [lat,lng],
+
+            {
+                icon,
+                keyboard:false
+            }
+
+        );
+
+        /* PARAMETER ACTION */
+
+        marker.on('click', async () => {
+
+            console.log(
+                "Clicked Branch Code:",
+                branchCode
+            );
+
+            await setSelectedBranchParameter(
+                branchCode
+            );
+        });
+
+        marker.bindPopup(`
+
+            <div class="popup-card">
+
+                <div class="popup-top">
+
+                    <div>
+
+                        <div class="branch-name">
+                            ${branch}
+                        </div>
+
+                        <div class="branch-status ${statusClass}">
+                            ${statusText}
+                        </div>
+
+                    </div>
+
+                    <div class="util-box">
+
+                        <div class="util-number">
+                            ${utilization}%
+                        </div>
+
+                        <div class="util-label">
+                            UTIL
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="kpi-grid">
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-label">
+                            Balance
+                        </div>
+
+                        <div class="kpi-currency">
+                            LKR
+                        </div>
+
+                        <div class="kpi-value">
+                            ${balance.toLocaleString()}
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-label">
+                            Credit Limit
+                        </div>
+
+                        <div class="kpi-currency">
+                            LKR
+                        </div>
+
+                        <div class="kpi-value">
+                            ${limit.toLocaleString()}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="progress-track">
+
+                    <div class="progress-fill ${fillClass}"
+                         style="width:${Math.min(utilization,100)}%">
+                    </div>
+
+                </div>
+
+            </div>
+
+        `);
+
+        marker.addTo(layer);
+
+        bounds.push([lat,lng]);
+    }
+
+    document.getElementById('healthyCount').innerText =
+        healthy;
+
+    document.getElementById('riskCount').innerText =
+        risk;
+
+    document.getElementById('totalBranches').innerText =
+        healthy + risk;
+
+    if(bounds.length){
+
+        map.fitBounds(bounds,{
+
+            padding:[25,25]
+        });
     }
 }
 
@@ -39,7 +1051,8 @@ window.onload = function(){
 
         worksheet.addEventListener(
 
-            tableau.TableauEventType.SummaryDataChanged,
+            tableau.TableauEventType
+            .SummaryDataChanged,
 
             update
         );
@@ -50,7 +1063,7 @@ window.onload = function(){
     .catch(error => {
 
         console.error(
-            'Extension Initialization Error:',
+            'Extension Error:',
             error
         );
     });
