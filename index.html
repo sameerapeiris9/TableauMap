@@ -6,220 +6,57 @@
 <meta charset="UTF-8"/>
 
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0"/>
+content="width=device-width, initial-scale=1.0"/>
 
 <title>ComBank Branch Map</title>
 
-<!-- Tableau Extensions API -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
-<!-- Leaflet -->
 <link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet">
-
 <style>
-
-:root{
-    --bg:#060e1c;
-    --surface:#0b1929;
-    --accent:#00b4ff;
-    --safe:#00e5a0;
-    --warn:#ff4560;
-    --text:#e8f4ff;
-    --muted:#567799;
-    --border:rgba(0,180,255,.15);
-}
-
-*{
-    box-sizing:border-box;
-}
 
 html,body{
     margin:0;
-    padding:0;
     height:100%;
     overflow:hidden;
-    background:var(--bg);
-    color:var(--text);
-    font-family:'DM Mono', monospace;
+    background:#06111f;
+    font-family:Arial;
 }
 
 #map{
-    position:absolute;
-    inset:0;
+    height:100%;
+    width:100%;
 }
 
-.leaflet-container{
-    background:var(--bg);
+.marker{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:bold;
+    color:white;
+    border:2px solid white;
+    box-shadow:0 0 20px currentColor;
 }
 
-.leaflet-tile{
-    filter:
-        brightness(.45)
-        saturate(.6)
-        hue-rotate(200deg);
-}
-
-/* SUMMARY */
-
-#summary{
+.summary{
     position:absolute;
     top:20px;
     left:20px;
     z-index:9999;
-
-    padding:16px 22px;
-
-    border-radius:16px;
-
-    background:rgba(11,25,41,.88);
-
-    border:1px solid var(--border);
-
-    backdrop-filter:blur(16px);
-}
-
-.sum-lbl{
-    font-size:11px;
-    color:var(--muted);
-    text-transform:uppercase;
-    letter-spacing:2px;
-}
-
-.sum-val{
-    font-size:34px;
-    color:var(--accent);
-    font-family:'Syne',sans-serif;
-    font-weight:800;
-}
-
-/* LEGEND */
-
-#legend{
-    position:absolute;
-    top:20px;
-    right:20px;
-    z-index:9999;
-
-    padding:14px 18px;
-
-    border-radius:16px;
-
-    background:rgba(11,25,41,.88);
-
-    border:1px solid var(--border);
-
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-
-    backdrop-filter:blur(16px);
-}
-
-.leg-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:12px;
-}
-
-.dot{
-    width:14px;
-    height:14px;
-    border-radius:50%;
-}
-
-/* PANEL */
-
-#panel{
-    position:absolute;
-
-    left:50%;
-    bottom:30px;
-
-    transform:translateX(-50%);
-
-    width:380px;
-
-    z-index:9999;
-
-    border-radius:18px;
-
-    background:rgba(11,25,41,.92);
-
-    border:1px solid var(--border);
-
-    backdrop-filter:blur(18px);
-
-    padding:22px;
-
-    display:none;
-}
-
-#panel.active{
-    display:block;
-}
-
-.p-title{
-    font-size:20px;
-    font-family:'Syne',sans-serif;
-    margin-bottom:16px;
-}
-
-.stat{
-    margin-bottom:12px;
-}
-
-.stat-lbl{
-    font-size:10px;
-    color:var(--muted);
-    letter-spacing:1px;
-    text-transform:uppercase;
-}
-
-.stat-val{
-    font-size:18px;
-    margin-top:4px;
-}
-
-.progress{
-    width:100%;
-    height:10px;
-    border-radius:10px;
-    overflow:hidden;
-    background:rgba(255,255,255,.08);
-}
-
-.bar{
-    height:100%;
-    width:0%;
-    transition:0.5s;
-}
-
-/* MARKER */
-
-.marker{
-    width:30px;
-    height:30px;
-    border-radius:50%;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-size:13px;
-    font-weight:700;
-
-    border:2px solid white;
-
-    box-shadow:
-        0 0 20px rgba(0,0,0,.5),
-        0 0 20px currentColor;
+    background:rgba(0,0,0,.7);
+    color:#00b4ff;
+    padding:15px 20px;
+    border-radius:14px;
+    font-size:28px;
+    font-weight:bold;
 }
 
 </style>
@@ -230,89 +67,37 @@ html,body{
 
 <div id="map"></div>
 
-<!-- SUMMARY -->
-
-<div id="summary">
-
-    <div class="sum-lbl">
-        ACTIVE BRANCHES
-    </div>
-
-    <div class="sum-val" id="count">
-        0
-    </div>
-
-</div>
-
-<!-- LEGEND -->
-
-<div id="legend">
-
-    <div class="leg-row">
-        <div class="dot" style="background:#00e5a0"></div>
-        Within limit
-    </div>
-
-    <div class="leg-row">
-        <div class="dot" style="background:#ff4560"></div>
-        Over limit
-    </div>
-
-</div>
-
-<!-- PANEL -->
-
-<div id="panel">
-
-    <div class="p-title" id="p-name">
-        Branch
-    </div>
-
-    <div class="stat">
-        <div class="stat-lbl">
-            Actual Balance
-        </div>
-
-        <div class="stat-val" id="p-bal"></div>
-    </div>
-
-    <div class="stat">
-        <div class="stat-lbl">
-            Budget Limit
-        </div>
-
-        <div class="stat-val" id="p-limit"></div>
-    </div>
-
-    <div class="stat">
-        <div class="stat-lbl">
-            Utilization
-        </div>
-
-        <div class="stat-val" id="p-util"></div>
-    </div>
-
-    <div class="progress">
-        <div class="bar" id="bar"></div>
-    </div>
-
+<div class="summary">
+    <span id="count">0</span>
 </div>
 
 <script>
 
-/* =========================================
-   GLOBALS
-========================================= */
-
 let map;
-let markersLayer;
+let layer;
 
-/* =========================================
-   FORMATTER
-========================================= */
+/* MAP */
 
-const fmt = v =>
-    new Intl.NumberFormat(
+function initMap(){
+
+    map = L.map('map',{
+        center:[7.87,80.77],
+        zoom:7,
+        attributionControl:false
+    });
+
+    L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    ).addTo(map);
+
+    layer = L.layerGroup().addTo(map);
+}
+
+/* FORMAT */
+
+function money(v){
+
+    return new Intl.NumberFormat(
         'en-LK',
         {
             style:'currency',
@@ -320,118 +105,16 @@ const fmt = v =>
             maximumFractionDigits:0
         }
     ).format(v);
-
-/* =========================================
-   MAP INIT
-========================================= */
-
-function initMap(){
-
-    map = L.map('map',{
-        center:[7.87,80.77],
-        zoom:7,
-        zoomControl:false,
-        attributionControl:false
-    });
-
-    L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        {
-            maxZoom:19
-        }
-    ).addTo(map);
-
-    markersLayer = L.layerGroup().addTo(map);
 }
 
-/* =========================================
-   PARSE ROW
-========================================= */
+/* LOAD DATA */
 
-function parseRow(row, columns){
-
-    const item = {};
-
-    columns.forEach((col, i) => {
-
-        const name =
-            col.fieldName.toLowerCase();
-
-        const cell = row[i];
-
-        console.log(name, cell.nativeValue);
-
-        /* BRANCH */
-
-        if(
-            name.includes('branch')
-        ){
-
-            item.name =
-                cell.formattedValue ||
-                cell.nativeValue;
-        }
-
-        /* LATITUDE */
-
-        else if(
-            name.includes('lat')
-        ){
-
-            item.lat =
-                Number(cell.nativeValue);
-        }
-
-        /* LONGITUDE */
-
-        else if(
-            name.includes('lon') ||
-            name.includes('long')
-        ){
-
-            item.lng =
-                Number(cell.nativeValue);
-        }
-
-        /* BALANCE */
-
-        else if(
-            name.includes('balance') ||
-            name.includes('total') ||
-            name.includes('lcey')
-        ){
-
-            item.bal =
-                Number(cell.nativeValue);
-        }
-
-        /* LIMIT */
-
-        else if(
-            name.includes('limit')
-        ){
-
-            item.limit =
-                Number(cell.nativeValue);
-        }
-
-    });
-
-    console.log("PARSED ROW", item);
-
-    return item;
-}
-
-/* =========================================
-   FETCH DATA
-========================================= */
-
-async function fetchData(worksheet){
+async function loadData(worksheet){
 
     const reader =
         await worksheet.getSummaryDataReaderAsync();
 
-    const rows = [];
+    const data = [];
 
     for(let p=0; p<reader.pageCount; p++){
 
@@ -440,16 +123,30 @@ async function fetchData(worksheet){
 
         page.data.forEach(row => {
 
-            const item =
-                parseRow(row, page.columns);
+            const item = {
+                branch:
+                    row[0].formattedValue,
+
+                lat:
+                    Number(row[1].value),
+
+                lng:
+                    Number(row[2].value),
+
+                balance:
+                    Number(row[3].value),
+
+                limit:
+                    Number(row[4].value)
+            };
+
+            console.log(item);
 
             if(
-                item.lat &&
-                item.lng &&
-                item.name
+                !isNaN(item.lat) &&
+                !isNaN(item.lng)
             ){
-
-                rows.push(item);
+                data.push(item);
             }
 
         });
@@ -457,62 +154,14 @@ async function fetchData(worksheet){
 
     await reader.releaseAsync();
 
-    return rows;
+    return data;
 }
 
-/* =========================================
-   DETAIL PANEL
-========================================= */
-
-function showPanel(d){
-
-    document
-        .getElementById('panel')
-        .classList.add('active');
-
-    document.getElementById('p-name')
-        .innerText = d.name;
-
-    document.getElementById('p-bal')
-        .innerText =
-            d.bal != null
-            ? fmt(d.bal)
-            : 'N/A';
-
-    document.getElementById('p-limit')
-        .innerText =
-            d.limit != null
-            ? fmt(d.limit)
-            : 'N/A';
-
-    const util =
-        d.limit
-        ? Math.round((d.bal/d.limit)*100)
-        : 0;
-
-    document.getElementById('p-util')
-        .innerText =
-            util + '%';
-
-    const bar =
-        document.getElementById('bar');
-
-    bar.style.width =
-        Math.min(util,100) + '%';
-
-    bar.style.background =
-        util > 100
-        ? '#ff4560'
-        : '#00e5a0';
-}
-
-/* =========================================
-   RENDER
-========================================= */
+/* RENDER */
 
 function render(data){
 
-    markersLayer.clearLayers();
+    layer.clearLayers();
 
     document.getElementById('count')
         .innerText = data.length;
@@ -521,18 +170,16 @@ function render(data){
 
     data.forEach(d => {
 
-        const isOver =
-            d.limit != null
-            ? d.bal > d.limit
-            : false;
+        const over =
+            d.balance > d.limit;
 
         const color =
-            isOver
+            over
             ? '#ff4560'
             : '#00e5a0';
 
         const symbol =
-            isOver
+            over
             ? '!'
             : '✓';
 
@@ -542,41 +189,31 @@ function render(data){
                 className:'',
 
                 html:`
-                    <div
-                        class="marker"
-                        style="
-                            background:${color};
-                            color:white;
-                        ">
+                    <div class="marker"
+                    style="background:${color}">
                         ${symbol}
                     </div>
                 `,
 
-                iconSize:[30,30],
-
-                iconAnchor:[15,15]
+                iconSize:[28,28],
+                iconAnchor:[14,14]
             });
 
         const marker =
             L.marker(
                 [d.lat,d.lng],
                 {icon}
-            );
+            ).addTo(layer);
 
-        marker.addTo(markersLayer);
-
-        marker.on('click',() => {
-
-            map.flyTo(
-                [d.lat,d.lng],
-                13,
-                {
-                    duration:1.2
-                }
-            );
-
-            showPanel(d);
-        });
+        marker.bindPopup(`
+            <b>${d.branch}</b>
+            <br><br>
+            Balance:
+            ${money(d.balance)}
+            <br>
+            Limit:
+            ${money(d.limit)}
+        `);
 
         bounds.push([d.lat,d.lng]);
 
@@ -584,18 +221,13 @@ function render(data){
 
     if(bounds.length){
 
-        map.fitBounds(
-            bounds,
-            {
-                padding:[40,40]
-            }
-        );
+        map.fitBounds(bounds,{
+            padding:[50,50]
+        });
     }
 }
 
-/* =========================================
-   TABLEAU INIT
-========================================= */
+/* INIT */
 
 tableau.extensions.initializeAsync()
 
@@ -603,22 +235,17 @@ tableau.extensions.initializeAsync()
 
     initMap();
 
-    const dashboard =
-        tableau.extensions
-               .dashboardContent
-               .dashboard;
-
     const worksheet =
-        dashboard.worksheets[0];
+        tableau.extensions
+        .worksheetContent
+        .worksheet;
 
     async function update(){
 
         try{
 
             const data =
-                await fetchData(worksheet);
-
-            console.log("FINAL DATA", data);
+                await loadData(worksheet);
 
             render(data);
 
@@ -627,10 +254,7 @@ tableau.extensions.initializeAsync()
 
             console.error(err);
 
-            alert(
-                'Error loading data: ' +
-                err.message
-            );
+            alert(err.message);
         }
     }
 
@@ -647,9 +271,8 @@ tableau.extensions.initializeAsync()
 
     console.error(err);
 
-    alert(
-        'Could not connect to Tableau'
-    );
+    alert(err.message);
+
 });
 
 </script>
