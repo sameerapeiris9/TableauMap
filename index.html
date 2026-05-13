@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>ComBank Premium Branch Map</title>
+<title>ComBank Premium Smart Map</title>
 
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
@@ -31,7 +31,7 @@ html,body{
         Segoe UI,
         sans-serif;
 
-    background:#0f172a;
+    background:#031326;
 }
 
 #map{
@@ -41,20 +41,13 @@ html,body{
 }
 
 /* =========================
-   MODERN MAP
+   MAP STYLE
 ========================= */
 
 .leaflet-container{
 
-    background:
-        linear-gradient(
-            180deg,
-            #0f172a 0%,
-            #111827 100%
-        );
+    background:#031326;
 }
-
-/* REMOVE ATTRIBUTION */
 
 .leaflet-control-attribution{
 
@@ -62,36 +55,38 @@ html,body{
 }
 
 /* =========================
-   ZOOM CONTROLS
+   GLASS ZOOM CONTROLS
 ========================= */
 
 .leaflet-control-zoom{
 
     border:none !important;
 
-    border-radius:16px !important;
+    margin-top:16px !important;
+    margin-left:16px !important;
+
+    border-radius:14px !important;
 
     overflow:hidden;
 
-    box-shadow:
-        0 8px 30px rgba(0,0,0,.25);
+    backdrop-filter:blur(10px);
 
-    margin-top:20px !important;
-    margin-left:20px !important;
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.35);
 }
 
 .leaflet-control-zoom a{
 
-    background:
-        rgba(255,255,255,.92) !important;
-
-    color:#111827 !important;
-
-    border:none !important;
-
     width:38px !important;
     height:38px !important;
     line-height:38px !important;
+
+    background:
+        rgba(255,255,255,.92) !important;
+
+    color:#0f172a !important;
+
+    border:none !important;
 
     font-size:22px !important;
 
@@ -100,40 +95,137 @@ html,body{
 
 .leaflet-control-zoom a:hover{
 
-    background:#2563eb !important;
+    background:#00b894 !important;
     color:white !important;
 }
 
 /* =========================
-   CLEAN MODERN MARKERS
+   LEFT PANEL
+========================= */
+
+.side-panel{
+
+    position:absolute;
+
+    top:110px;
+    left:14px;
+
+    width:170px;
+
+    z-index:9999;
+
+    background:
+        rgba(3,19,38,.82);
+
+    backdrop-filter:blur(16px);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius:18px;
+
+    padding:16px;
+
+    color:white;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.35);
+}
+
+.panel-title{
+
+    font-size:15px;
+    font-weight:700;
+
+    margin-bottom:14px;
+}
+
+.legend-item{
+
+    display:flex;
+    align-items:center;
+
+    margin-bottom:12px;
+
+    font-size:12px;
+}
+
+.legend-dot{
+
+    width:12px;
+    height:12px;
+
+    border-radius:50%;
+
+    margin-right:10px;
+}
+
+.green{
+
+    background:#19c37d;
+}
+
+.red{
+
+    background:#ff4d6d;
+}
+
+.summary-title{
+
+    margin-top:18px;
+    margin-bottom:14px;
+
+    font-size:14px;
+    font-weight:700;
+}
+
+.summary-row{
+
+    display:flex;
+    justify-content:space-between;
+
+    margin-bottom:12px;
+
+    font-size:12px;
+}
+
+.summary-value-green{
+
+    color:#19c37d;
+    font-weight:700;
+}
+
+.summary-value-red{
+
+    color:#ff4d6d;
+    font-weight:700;
+}
+
+/* =========================
+   MARKERS
 ========================= */
 
 .marker{
 
-    width:10px;
-    height:10px;
+    width:12px;
+    height:12px;
 
     border-radius:50%;
 
-    border:2px solid white;
+    border:2px solid rgba(255,255,255,.95);
 
     box-shadow:
-        0 0 0 2px rgba(255,255,255,.15);
-
+        0 2px 10px rgba(0,0,0,.28);
 }
-
-/* HEALTHY */
 
 .marker-ok{
 
-    background:#10b981;
+    background:#19c37d;
 }
-
-/* ALERT */
 
 .marker-alert{
 
-    background:#ef4444;
+    background:#ff4d6d;
 }
 
 /* =========================
@@ -143,14 +235,17 @@ html,body{
 .leaflet-popup-content-wrapper{
 
     background:
-        rgba(255,255,255,.96) !important;
+        rgba(3,19,38,.96) !important;
 
-    border-radius:20px;
+    backdrop-filter:blur(18px);
+
+    border-radius:22px;
+
+    border:
+        1px solid rgba(255,255,255,.08);
 
     box-shadow:
-        0 20px 50px rgba(0,0,0,.22);
-
-    border:none;
+        0 20px 50px rgba(0,0,0,.45);
 
     padding:0;
 }
@@ -158,14 +253,14 @@ html,body{
 .leaflet-popup-tip{
 
     background:
-        rgba(255,255,255,.96) !important;
+        rgba(3,19,38,.96) !important;
 }
 
 .leaflet-popup-content{
 
     margin:0 !important;
 
-    width:260px !important;
+    width:310px !important;
 }
 
 .popup-card{
@@ -179,7 +274,7 @@ html,body{
 
     display:flex;
     justify-content:space-between;
-    align-items:center;
+    align-items:flex-start;
 
     margin-bottom:18px;
 }
@@ -189,34 +284,40 @@ html,body{
     font-size:18px;
     font-weight:700;
 
-    color:#0f172a;
+    color:white;
 }
 
-/* STATUS */
+.popup-sub{
 
-.popup-status{
+    margin-top:6px;
+
+    display:inline-block;
 
     font-size:11px;
     font-weight:700;
 
-    padding:6px 10px;
+    padding:5px 10px;
 
     border-radius:999px;
 }
 
-.status-ok{
+.sub-ok{
 
-    background:#dcfce7;
-    color:#166534;
+    background:
+        rgba(25,195,125,.18);
+
+    color:#19c37d;
 }
 
-.status-alert{
+.sub-alert{
 
-    background:#fee2e2;
-    color:#991b1b;
+    background:
+        rgba(255,77,109,.18);
+
+    color:#ff4d6d;
 }
 
-/* STATS */
+/* GRID */
 
 .popup-grid{
 
@@ -224,56 +325,108 @@ html,body{
 
     grid-template-columns:1fr 1fr;
 
-    gap:12px;
+    gap:14px;
+
+    margin-bottom:18px;
 }
 
 .popup-box{
 
-    background:#f8fafc;
+    background:
+        rgba(255,255,255,.04);
 
-    border-radius:14px;
+    border:
+        1px solid rgba(255,255,255,.05);
+
+    border-radius:16px;
 
     padding:14px;
 }
 
 .popup-label{
 
+    color:#7dd3fc;
+
     font-size:11px;
 
-    color:#64748b;
+    margin-bottom:10px;
 
     text-transform:uppercase;
 
     letter-spacing:1px;
-
-    margin-bottom:8px;
 }
 
 .popup-value{
 
-    font-size:16px;
+    font-size:20px;
     font-weight:700;
 
-    color:#0f172a;
+    color:white;
+}
+
+/* PROGRESS */
+
+.progress-wrap{
+
+    margin-top:8px;
+}
+
+.progress-top{
+
+    display:flex;
+    justify-content:space-between;
+
+    margin-bottom:8px;
+
+    font-size:11px;
+
+    color:#cbd5e1;
+}
+
+.progress{
+
+    width:100%;
+    height:10px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    border-radius:999px;
+
+    overflow:hidden;
+}
+
+.progress-bar{
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #19c37d,
+            #00e5ff
+        );
 }
 
 /* CLOSE BUTTON */
 
 .leaflet-container a.leaflet-popup-close-button{
 
-    color:#475569 !important;
+    color:white !important;
 
-    top:10px !important;
-    right:12px !important;
+    top:14px !important;
+    right:14px !important;
 
     font-size:18px !important;
 }
 
 /* =========================
-   MAP GLASS OVERLAY
+   OVERLAY GLOW
 ========================= */
 
-.map-overlay{
+.overlay{
 
     position:absolute;
 
@@ -285,14 +438,14 @@ html,body{
 
         radial-gradient(
             circle at top left,
-            rgba(37,99,235,.12),
-            transparent 35%
+            rgba(0,229,255,.10),
+            transparent 30%
         ),
 
         radial-gradient(
             circle at bottom right,
-            rgba(16,185,129,.10),
-            transparent 35%
+            rgba(25,195,125,.10),
+            transparent 30%
         );
 
     z-index:400;
@@ -306,7 +459,45 @@ html,body{
 
 <div id="map"></div>
 
-<div class="map-overlay"></div>
+<div class="overlay"></div>
+
+<!-- SIDE PANEL -->
+
+<div class="side-panel">
+
+    <div class="panel-title">
+        Branch Status
+    </div>
+
+    <div class="legend-item">
+        <div class="legend-dot green"></div>
+        Within Limit
+    </div>
+
+    <div class="legend-item">
+        <div class="legend-dot red"></div>
+        Over Limit
+    </div>
+
+    <div class="summary-title">
+        Summary
+    </div>
+
+    <div class="summary-row">
+        <span>Within Limit</span>
+        <span class="summary-value-green" id="okCount">
+            0
+        </span>
+    </div>
+
+    <div class="summary-row">
+        <span>Over Limit</span>
+        <span class="summary-value-red" id="alertCount">
+            0
+        </span>
+    </div>
+
+</div>
 
 <script>
 
@@ -315,7 +506,7 @@ let map;
 let layer;
 
 /* =========================
-   INIT MAP
+   MAP
 ========================= */
 
 function initMap(){
@@ -325,17 +516,16 @@ function initMap(){
         center:[7.8731,80.7718],
         zoom:8,
 
-        zoomControl:true,
         attributionControl:false,
-
         preferCanvas:true
     });
 
-    /* LIGHT MODERN MAP */
+    /* SATELLITE STYLE */
 
     L.tileLayer(
 
-        'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+        'World_Imagery/MapServer/tile/{z}/{y}/{x}',
 
         {
             maxZoom:19
@@ -343,11 +533,12 @@ function initMap(){
 
     ).addTo(map);
 
-    /* LABEL LAYER */
+    /* LABELS */
 
     L.tileLayer(
 
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+        'https://services.arcgisonline.com/ArcGIS/rest/services/' +
+        'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
 
         {
             pane:'shadowPane'
@@ -359,7 +550,7 @@ function initMap(){
 }
 
 /* =========================
-   MONEY FORMAT
+   MONEY
 ========================= */
 
 function money(v){
@@ -378,7 +569,7 @@ function money(v){
 }
 
 /* =========================
-   GET TABLEAU DATA
+   DATA
 ========================= */
 
 async function getSummaryDataTable(ws){
@@ -434,8 +625,6 @@ function render(data){
 
     const keys = Object.keys(sample);
 
-    /* FIELD DETECTION */
-
     const branchField = keys.find(k =>
         k.toLowerCase() === 'branch'
     );
@@ -456,73 +645,66 @@ function render(data){
         k.toLowerCase().includes('limit')
     );
 
-    /* PROCESS */
-
-    const processed = data.map(d => {
-
-        return {
-
-            branch:
-                branchField && d[branchField]
-                    ? d[branchField].formattedValue
-                    : "Unknown",
-
-            lat:
-                latField && d[latField]
-                    ? Number(d[latField].nativeValue)
-                    : NaN,
-
-            lng:
-                lngField && d[lngField]
-                    ? Number(d[lngField].nativeValue)
-                    : NaN,
-
-            balance:
-                balanceField && d[balanceField]
-                    ? Number(d[balanceField].nativeValue)
-                    : 0,
-
-            limit:
-                limitField && d[limitField]
-                    ? Number(d[limitField].nativeValue)
-                    : 0
-        };
-    });
-
-    /* VALID COORDS */
-
-    const valid = processed.filter(d => {
-
-        return (
-
-            !isNaN(d.lat) &&
-            !isNaN(d.lng) &&
-
-            d.lat >= 5 &&
-            d.lat <= 11 &&
-
-            d.lng >= 79 &&
-            d.lng <= 82
-        );
-    });
+    let okCount = 0;
+    let alertCount = 0;
 
     const bounds = [];
 
-    /* MARKERS */
+    data.forEach(d => {
 
-    valid.forEach(d => {
+        const lat =
+            latField && d[latField]
+                ? Number(d[latField].nativeValue)
+                : NaN;
+
+        const lng =
+            lngField && d[lngField]
+                ? Number(d[lngField].nativeValue)
+                : NaN;
+
+        if(
+            isNaN(lat) ||
+            isNaN(lng)
+        ){
+            return;
+        }
+
+        const branch =
+            branchField && d[branchField]
+                ? d[branchField].formattedValue
+                : "Unknown";
+
+        const balance =
+            balanceField && d[balanceField]
+                ? Number(d[balanceField].nativeValue)
+                : 0;
+
+        const limit =
+            limitField && d[limitField]
+                ? Number(d[limitField].nativeValue)
+                : 0;
 
         const over =
-            d.balance > d.limit;
+            balance > limit;
+
+        if(over){
+            alertCount++;
+        }else{
+            okCount++;
+        }
+
+        const percent = limit > 0
+            ? ((balance / limit) * 100).toFixed(1)
+            : 0;
 
         const markerClass =
             over ? 'marker-alert' : 'marker-ok';
 
         const statusClass =
-            over ? 'status-alert' : 'status-ok';
+            over ? 'sub-alert' : 'sub-ok';
 
         const statusText =
-            over ? 'Over Limit' : 'Healthy';
+            over ? 'Over Limit' : 'Within Limit';
 
         const icon = L.divIcon({
 
@@ -533,16 +715,13 @@ function render(data){
                 </div>
             `,
 
-            iconSize:[10,10],
-            iconAnchor:[5,5]
+            iconSize:[12,12],
+            iconAnchor:[6,6]
         });
 
         const marker = L.marker(
-
-            [d.lat,d.lng],
-
+            [lat,lng],
             { icon }
-
         ).addTo(layer);
 
         marker.bindPopup(`
@@ -551,12 +730,16 @@ function render(data){
 
                 <div class="popup-header">
 
-                    <div class="popup-title">
-                        ${d.branch}
-                    </div>
+                    <div>
 
-                    <div class="popup-status ${statusClass}">
-                        ${statusText}
+                        <div class="popup-title">
+                            ${branch}
+                        </div>
+
+                        <div class="popup-sub ${statusClass}">
+                            ${statusText}
+                        </div>
+
                     </div>
 
                 </div>
@@ -566,11 +749,11 @@ function render(data){
                     <div class="popup-box">
 
                         <div class="popup-label">
-                            Balance
+                            Total Balance
                         </div>
 
                         <div class="popup-value">
-                            ${money(d.balance)}
+                            ${money(balance)}
                         </div>
 
                     </div>
@@ -578,11 +761,36 @@ function render(data){
                     <div class="popup-box">
 
                         <div class="popup-label">
-                            Limit
+                            Credit Limit
                         </div>
 
                         <div class="popup-value">
-                            ${money(d.limit)}
+                            ${money(limit)}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="progress-wrap">
+
+                    <div class="progress-top">
+
+                        <span>
+                            Utilization
+                        </span>
+
+                        <span>
+                            ${percent}%
+                        </span>
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div
+                            class="progress-bar"
+                            style="width:${Math.min(percent,100)}%">
                         </div>
 
                     </div>
@@ -593,17 +801,20 @@ function render(data){
 
         `);
 
-        bounds.push([d.lat,d.lng]);
+        bounds.push([lat,lng]);
     });
 
-    /* AUTO FIT */
+    document.getElementById("okCount")
+        .innerText = okCount;
+
+    document.getElementById("alertCount")
+        .innerText = alertCount;
 
     if(bounds.length){
 
         map.fitBounds(bounds,{
 
             padding:[40,40]
-
         });
     }
 }
@@ -642,7 +853,6 @@ window.onload = function(){
             tableau.TableauEventType.SummaryDataChanged,
 
             update
-
         );
 
         update();
@@ -651,7 +861,7 @@ window.onload = function(){
     .catch(error => {
 
         console.error(
-            "Extension Initialization Error:",
+            "Extension Error:",
             error
         );
     });
