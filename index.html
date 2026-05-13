@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>ComBank Branch Map</title>
+  
+  <!-- Include the Tableau Extensions API Library -->
+  <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api@main/lib/tableau.extensions.1.latest.js"></script>
+  
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 10px; }
+    #map-container { width: 100%; height: 500px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <h2>ComBank Branch Map</h2>
+  <div id="status">Loading Tableau Extension...</div>
+  <div id="map-container">Map will render here.</div>
+
+  <script>
+    // 1. Initialize the Tableau Extension
+    window.onload = function () {
+      tableau.extensions.initializeAsync().then(function () {
+        document.getElementById('status').innerText = "Extension Initialized. Waiting for data...";
+        
+        // Access the current worksheet
+        const worksheet = tableau.extensions.worksheetContent.worksheet;
+
+        // 2. Add an event listener to redraw the map when data or encodings change
+        worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, function() {
+          updateMapData(worksheet);
+        });
+
+        // Run an initial update in case data is already present
+        updateMapData(worksheet);
+        
+      }).catch(function (error) {
+        document.getElementById('status').innerText = "Error initializing extension: " + error.toString();
+      });
+    };
+
+    // 3. Fetch data and encodings from Tableau
+    function updateMapData(worksheet) {
+      document.getElementById('status').innerText = "Updating map data...";
+
+      // Get the encoding mappings (which fields the user dropped onto your tiles)
+      worksheet.getVisualSpecificationAsync().then(function (visualSpec) {
+        
+        // Get the summary data
+        worksheet.getSummaryDataReaderAsync().then(function (dataTableReader) {
+            dataTableReader.getAllPagesAsync().then(function (dataTable) {
+                
+                // You can now parse dataTable.data based on the visualSpec mappings
+                // and pass it to your map rendering logic.
+                
+                document.getElementById('status').innerText = "Data loaded! Found " + dataTable.data.length + " rows.";
+                
+                // Example: Draw Map Function
+                // drawComBankMap(dataTable.data, visualSpec);
+                
+            });
+        });
+      });
+    }
+  </script>
+</body>
+</html>
