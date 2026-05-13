@@ -160,56 +160,78 @@ function render(data){
         return;
     }
 
-    /*
-    =====================================
-    IMPORTANT:
-    USE THESE EXACT FIELD NAMES
-    IN TABLEAU
-    =====================================
+    const sample = data[0];
 
-    branch
-    latitude
-    longitude
-    balance
-    limit
+    const keys = Object.keys(sample);
 
-    =====================================
-    */
+    console.log("FIELDS:", keys);
+
+    /* FIELD DETECTION */
+
+    const branchField = keys.find(k =>
+        k.toLowerCase() === 'branch'
+    );
+
+    const latField = keys.find(k =>
+        k.toLowerCase() === 'latitude'
+    );
+
+    const lngField = keys.find(k =>
+        k.toLowerCase() === 'longitude'
+    );
+
+    const balanceField = keys.find(k =>
+        k.toLowerCase().includes('balance')
+    );
+
+    const limitField = keys.find(k =>
+        k.toLowerCase().includes('limit')
+    );
+
+    console.log({
+        branchField,
+        latField,
+        lngField,
+        balanceField,
+        limitField
+    });
+
+    /* PROCESS DATA */
 
     const processed = data.map(d => {
 
         return {
 
             branch:
-                d["branch"]
-                    ? d["branch"].formattedValue
+                branchField && d[branchField]
+                    ? d[branchField].formattedValue
                     : "Unknown",
 
             lat:
-                d["latitude"]
-                    ? Number(d["latitude"].nativeValue)
+                latField && d[latField]
+                    ? Number(d[latField].nativeValue)
                     : NaN,
 
             lng:
-                d["longitude"]
-                    ? Number(d["longitude"].nativeValue)
+                lngField && d[lngField]
+                    ? Number(d[lngField].nativeValue)
                     : NaN,
 
             balance:
-                d["balance"]
-                    ? Number(d["balance"].nativeValue)
+                balanceField && d[balanceField]
+                    ? Number(d[balanceField].nativeValue)
                     : 0,
 
             limit:
-                d["limit"]
-                    ? Number(d["limit"].nativeValue)
+                limitField && d[limitField]
+                    ? Number(d[limitField].nativeValue)
                     : 0
         };
     });
 
-    console.log("PROCESSED:", processed);
+    console.table(processed);
 
-    /* VALID SRI LANKA COORDINATES */
+    /* VALIDATE COORDINATES */
 
     const valid = processed.filter(d => {
 
@@ -223,9 +245,13 @@ function render(data){
         );
     });
 
+    /* UPDATE COUNT */
+
     document.getElementById('count').innerText = valid.length;
 
     const bounds = [];
+
+    /* CREATE MARKERS */
 
     valid.forEach(d => {
 
@@ -233,7 +259,7 @@ function render(data){
 
         const color = over
             ? '#ff4560'
-            : '#00e5a0';
+            : '#10e39a';
 
         const symbol = over
             ? '!'
@@ -257,15 +283,27 @@ function render(data){
         ).addTo(layer);
 
         marker.bindPopup(`
-            <b>${d.branch}</b>
-            <br><br>
-            Balance: ${money(d.balance)}
-            <br>
-            Limit: ${money(d.limit)}
+            <div style="font-family:Arial">
+                <b style="font-size:20px">
+                    ${d.branch}
+                </b>
+
+                <br><br>
+
+                Balance:
+                <b>${money(d.balance)}</b>
+
+                <br>
+
+                Limit:
+                <b>${money(d.limit)}</b>
+            </div>
         `);
 
         bounds.push([d.lat,d.lng]);
     });
+
+    /* AUTO ZOOM */
 
     if(bounds.length){
 
