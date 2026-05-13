@@ -4,22 +4,24 @@
 <head>
 
 <meta charset="UTF-8">
-<title>ComBank Smart Branch Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ComBank Fast Branch Map</title>
 
+<!-- TABLEAU -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
+<!-- LEAFLET -->
 <link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
 
-/* =========================================================
+/* ======================================================
    GLOBAL
-========================================================= */
+====================================================== */
 
 html,
 body{
@@ -29,13 +31,13 @@ body{
     height:100%;
     overflow:hidden;
 
+    background:#07111f;
+
     font-family:
         Inter,
         Segoe UI,
         Arial,
         sans-serif;
-
-    background:#04152b;
 }
 
 #map{
@@ -44,92 +46,51 @@ body{
     height:100%;
 }
 
-/* =========================================================
-   MAP STYLE
-========================================================= */
+/* ======================================================
+   PERFORMANCE OPTIMIZED MAP
+====================================================== */
 
 .leaflet-container{
 
-    background:#04152b;
+    background:#07111f;
 }
+
+/* REMOVE ATTRIBUTION */
 
 .leaflet-control-attribution{
 
     display:none !important;
 }
 
-/* =========================================================
+/* ======================================================
    GLASS PANEL
-========================================================= */
+====================================================== */
 
 .glass{
 
     background:
-        rgba(5,18,38,.72);
-
-    backdrop-filter:
-        blur(18px);
+        rgba(6,18,35,.78);
 
     border:
-        1px solid rgba(255,255,255,.08);
+        1px solid rgba(255,255,255,.06);
+
+    backdrop-filter:
+        blur(10px);
 
     box-shadow:
-        0 10px 40px rgba(0,0,0,.35);
+        0 8px 25px rgba(0,0,0,.28);
 }
 
-/* =========================================================
-   ZOOM CONTROLS
-========================================================= */
+/* ======================================================
+   LEFT STATUS PANEL
+====================================================== */
 
-.leaflet-control-zoom{
-
-    border:none !important;
-
-    overflow:hidden;
-
-    border-radius:14px !important;
-
-    margin-top:14px !important;
-    margin-left:14px !important;
-
-    box-shadow:
-        0 8px 25px rgba(0,0,0,.35);
-}
-
-.leaflet-control-zoom a{
-
-    width:34px !important;
-    height:34px !important;
-    line-height:34px !important;
-
-    border:none !important;
-
-    background:
-        rgba(255,255,255,.95) !important;
-
-    color:#111827 !important;
-
-    font-size:22px !important;
-
-    transition:.2s;
-}
-
-.leaflet-control-zoom a:hover{
-
-    background:#0ea5e9 !important;
-    color:white !important;
-}
-
-/* =========================================================
-   SIDE PANEL
-========================================================= */
-
-.side-panel{
+.panel{
 
     position:absolute;
 
-    top:110px;
-    left:10px;
+    top:14px;
+    left:14px;
 
     width:170px;
 
@@ -150,7 +111,7 @@ body{
     margin-bottom:14px;
 }
 
-.legend-item{
+.legend{
 
     display:flex;
     align-items:center;
@@ -160,8 +121,8 @@ body{
 
 .legend-dot{
 
-    width:12px;
-    height:12px;
+    width:10px;
+    height:10px;
 
     border-radius:50%;
 
@@ -180,12 +141,12 @@ body{
 
 .legend-text{
 
-    color:rgba(255,255,255,.88);
+    color:rgba(255,255,255,.82);
 
     font-size:12px;
 }
 
-.summary-divider{
+.divider{
 
     height:1px;
 
@@ -195,7 +156,7 @@ body{
     margin:16px 0;
 }
 
-.summary-row{
+.summary{
 
     display:flex;
     justify-content:space-between;
@@ -216,40 +177,28 @@ body{
     font-weight:700;
 }
 
-.value-ok{
+.ok-value{
 
     color:#10d876;
 }
 
-.value-alert{
+.alert-value{
 
     color:#ff4d67;
 }
 
-/* =========================================================
-   MARKERS
-========================================================= */
+/* ======================================================
+   FAST LIGHTWEIGHT MARKERS
+====================================================== */
 
-.marker{
+.branch-marker{
 
-    width:13px;
-    height:13px;
+    width:10px;
+    height:10px;
 
     border-radius:50%;
 
     border:2px solid white;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    color:white;
-
-    font-size:8px;
-    font-weight:700;
-
-    box-shadow:
-        0 0 0 2px rgba(255,255,255,.12);
 }
 
 .marker-ok{
@@ -262,25 +211,22 @@ body{
     background:#ff4d67;
 }
 
-/* =========================================================
-   POPUP CARD
-========================================================= */
+/* ======================================================
+   MODERN POPUP
+====================================================== */
 
 .leaflet-popup-content-wrapper{
 
     background:
-        rgba(5,18,38,.88) !important;
+        rgba(8,17,32,.94) !important;
 
-    backdrop-filter:
-        blur(20px);
-
-    border-radius:18px;
+    border-radius:16px;
 
     border:
-        1px solid rgba(255,255,255,.08);
+        1px solid rgba(255,255,255,.06);
 
     box-shadow:
-        0 20px 50px rgba(0,0,0,.45);
+        0 14px 35px rgba(0,0,0,.32);
 
     padding:0;
 }
@@ -288,28 +234,26 @@ body{
 .leaflet-popup-tip{
 
     background:
-        rgba(5,18,38,.88) !important;
+        rgba(8,17,32,.94) !important;
 }
 
 .leaflet-popup-content{
 
     margin:0 !important;
 
-    width:320px !important;
+    width:260px !important;
 }
 
-.popup-card{
+.popup{
 
-    padding:18px;
+    padding:16px;
 }
-
-/* HEADER */
 
 .popup-header{
 
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
+    align-items:center;
 
     margin-bottom:16px;
 }
@@ -318,23 +262,17 @@ body{
 
     color:white;
 
-    font-size:20px;
+    font-size:17px;
     font-weight:700;
-
-    line-height:1.3;
 }
 
 .popup-status{
 
-    margin-top:8px;
-
-    display:inline-block;
-
-    padding:5px 10px;
+    padding:5px 9px;
 
     border-radius:999px;
 
-    font-size:11px;
+    font-size:10px;
     font-weight:700;
 }
 
@@ -354,209 +292,105 @@ body{
     color:#ff4d67;
 }
 
-/* GRID */
+/* STATS */
 
-.popup-grid{
+.stats{
 
     display:grid;
 
     grid-template-columns:1fr 1fr;
 
-    gap:14px;
-
-    margin-bottom:16px;
+    gap:10px;
 }
 
-.popup-box{
+.stat{
 
     background:
         rgba(255,255,255,.04);
 
-    border:
-        1px solid rgba(255,255,255,.05);
+    border-radius:12px;
 
-    border-radius:14px;
-
-    padding:14px;
+    padding:12px;
 }
 
-.popup-label{
+.stat-label{
 
     color:rgba(255,255,255,.6);
 
-    font-size:11px;
+    font-size:10px;
 
-    margin-bottom:8px;
+    margin-bottom:6px;
 
     text-transform:uppercase;
-
-    letter-spacing:.8px;
 }
 
-.popup-currency{
-
-    color:rgba(255,255,255,.55);
-
-    font-size:11px;
-
-    margin-bottom:5px;
-}
-
-.popup-value{
+.stat-value{
 
     color:white;
 
-    font-size:24px;
+    font-size:15px;
     font-weight:700;
 }
 
-/* UTILIZATION */
+/* ======================================================
+   ZOOM CONTROL
+====================================================== */
 
-.utilization-header{
+.leaflet-control-zoom{
 
-    display:flex;
-    justify-content:space-between;
+    border:none !important;
 
-    margin-bottom:8px;
-}
-
-.utilization-label{
-
-    color:rgba(255,255,255,.65);
-
-    font-size:12px;
-}
-
-.utilization-value{
-
-    color:white;
-
-    font-size:12px;
-    font-weight:700;
-}
-
-.progress{
-
-    width:100%;
-    height:8px;
-
-    background:
-        rgba(255,255,255,.08);
-
-    border-radius:999px;
+    border-radius:14px !important;
 
     overflow:hidden;
+
+    margin-top:14px !important;
+    margin-right:14px !important;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.24);
 }
 
-.progress-fill{
-
-    height:100%;
-
-    border-radius:999px;
+.leaflet-control-zoom a{
 
     background:
-        linear-gradient(
-            90deg,
-            #10d876,
-            #00c2ff
-        );
+        rgba(255,255,255,.95) !important;
+
+    color:#111827 !important;
+
+    border:none !important;
+
+    width:34px !important;
+    height:34px !important;
+
+    line-height:34px !important;
+
+    font-size:20px !important;
 }
 
-/* CLOSE */
+.leaflet-control-zoom a:hover{
 
-.leaflet-container a.leaflet-popup-close-button{
+    background:#0ea5e9 !important;
 
     color:white !important;
-
-    top:10px !important;
-    right:12px !important;
-
-    font-size:18px !important;
 }
 
-/* =========================================================
-   TOP RIGHT FILTER BTN
-========================================================= */
+/* ======================================================
+   PERFORMANCE IMPROVEMENTS
+====================================================== */
 
-.top-btn{
+/* disable heavy transitions */
 
-    position:absolute;
+.leaflet-fade-anim .leaflet-popup{
 
-    top:14px;
-    right:14px;
-
-    width:38px;
-    height:38px;
-
-    border-radius:12px;
-
-    z-index:9999;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    color:white;
-
-    font-size:16px;
+    transition:none !important;
 }
 
-/* =========================================================
-   BOTTOM RIGHT LAYER
-========================================================= */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon{
 
-.layer-box{
-
-    position:absolute;
-
-    right:14px;
-    bottom:14px;
-
-    display:flex;
-    gap:10px;
-
-    z-index:9999;
-}
-
-.layer-btn{
-
-    padding:10px 14px;
-
-    border-radius:12px;
-
-    color:white;
-
-    font-size:12px;
-    font-weight:600;
-}
-
-/* =========================================================
-   MAP OVERLAY
-========================================================= */
-
-.map-overlay{
-
-    position:absolute;
-
-    inset:0;
-
-    pointer-events:none;
-
-    background:
-
-        radial-gradient(
-            circle at top left,
-            rgba(0,162,255,.18),
-            transparent 30%
-        ),
-
-        radial-gradient(
-            circle at bottom right,
-            rgba(0,255,163,.12),
-            transparent 30%
-        );
-
-    z-index:400;
+    will-change:auto !important;
 }
 
 </style>
@@ -567,83 +401,69 @@ body{
 
 <div id="map"></div>
 
-<div class="map-overlay"></div>
-
-<!-- =====================================================
+<!-- ======================================================
      SIDE PANEL
-===================================================== -->
+====================================================== -->
 
-<div class="side-panel glass">
+<div class="panel glass">
 
     <div class="panel-title">
         Branch Status
     </div>
 
-    <div class="legend-item">
+    <div class="legend">
         <div class="legend-dot dot-ok"></div>
-        <div class="legend-text">Within Limit</div>
+        <div class="legend-text">
+            Within Limit
+        </div>
     </div>
 
-    <div class="legend-item">
+    <div class="legend">
         <div class="legend-dot dot-alert"></div>
-        <div class="legend-text">Over Limit</div>
+        <div class="legend-text">
+            Over Limit
+        </div>
     </div>
 
-    <div class="summary-divider"></div>
+    <div class="divider"></div>
 
-    <div class="panel-title">
-        Summary
+    <div class="summary">
+        <div class="summary-label">
+            Healthy
+        </div>
+
+        <div class="summary-value ok-value"
+             id="okCount">
+            0
+        </div>
     </div>
 
-    <div class="summary-row">
-        <div class="summary-label">Within Limit</div>
-        <div class="summary-value value-ok" id="okCount">0</div>
-    </div>
+    <div class="summary">
+        <div class="summary-label">
+            Risk
+        </div>
 
-    <div class="summary-row">
-        <div class="summary-label">Over Limit</div>
-        <div class="summary-value value-alert" id="alertCount">0</div>
-    </div>
-
-</div>
-
-<!-- =====================================================
-     TOP BUTTON
-===================================================== -->
-
-<div class="top-btn glass">
-    ▽
-</div>
-
-<!-- =====================================================
-     LAYER BUTTONS
-===================================================== -->
-
-<div class="layer-box">
-
-    <div class="layer-btn glass">
-        Streets
-    </div>
-
-    <div class="layer-btn glass">
-        Terrain
+        <div class="summary-value alert-value"
+             id="alertCount">
+            0
+        </div>
     </div>
 
 </div>
 
 <script>
 
-/* =====================================================
+/* ======================================================
    VARIABLES
-===================================================== */
+====================================================== */
 
 let worksheet;
 let map;
 let layer;
 
-/* =====================================================
-   INIT MAP
-===================================================== */
+/* ======================================================
+   FAST MAP INIT
+====================================================== */
 
 function initMap(){
 
@@ -655,29 +475,23 @@ function initMap(){
         zoomControl:true,
         attributionControl:false,
 
+        fadeAnimation:false,
+        zoomAnimation:true,
+        markerZoomAnimation:false,
+
         preferCanvas:true
     });
 
-    /* SATELLITE STYLE */
+    /* FAST LIGHT MAP */
 
     L.tileLayer(
 
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
         {
-            maxZoom:19
-        }
-
-    ).addTo(map);
-
-    /* LABELS */
-
-    L.tileLayer(
-
-        'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-
-        {
-            pane:'overlayPane'
+            maxZoom:18,
+            updateWhenIdle:true,
+            keepBuffer:2
         }
 
     ).addTo(map);
@@ -685,9 +499,9 @@ function initMap(){
     layer = L.layerGroup().addTo(map);
 }
 
-/* =====================================================
+/* ======================================================
    MONEY FORMAT
-===================================================== */
+====================================================== */
 
 function money(v){
 
@@ -704,9 +518,9 @@ function money(v){
     ).format(v);
 }
 
-/* =====================================================
+/* ======================================================
    GET TABLEAU DATA
-===================================================== */
+====================================================== */
 
 async function getSummaryDataTable(ws){
 
@@ -745,9 +559,9 @@ async function getSummaryDataTable(ws){
     return rows;
 }
 
-/* =====================================================
-   RENDER
-===================================================== */
+/* ======================================================
+   RENDER MAP
+====================================================== */
 
 function render(data){
 
@@ -760,6 +574,8 @@ function render(data){
     const sample = data[0];
 
     const keys = Object.keys(sample);
+
+    /* FIELD DETECTION */
 
     const branchField = keys.find(k =>
         k.toLowerCase() === 'branch'
@@ -786,7 +602,11 @@ function render(data){
 
     const bounds = [];
 
-    data.forEach(d => {
+    /* DRAW */
+
+    for(let i=0; i<data.length; i++){
+
+        const d = data[i];
 
         const branch =
             branchField && d[branchField]
@@ -817,7 +637,7 @@ function render(data){
             isNaN(lat) ||
             isNaN(lng)
         ){
-            return;
+            continue;
         }
 
         const over = balance > limit;
@@ -829,31 +649,31 @@ function render(data){
         }
 
         const markerClass =
-            over ? 'marker-alert' : 'marker-ok';
+            over
+                ? 'marker-alert'
+                : 'marker-ok';
 
         const statusClass =
-            over ? 'status-alert' : 'status-ok';
+            over
+                ? 'status-alert'
+                : 'status-ok';
 
         const statusText =
-            over ? 'Over Limit' : 'Within Limit';
-
-        const utilization =
-            limit > 0
-                ? ((balance / limit) * 100).toFixed(2)
-                : 0;
+            over
+                ? 'Over Limit'
+                : 'Healthy';
 
         const icon = L.divIcon({
 
             className:'',
 
             html:`
-                <div class="marker ${markerClass}">
-                    ${over ? '!' : '✓'}
+                <div class="branch-marker ${markerClass}">
                 </div>
             `,
 
-            iconSize:[13,13],
-            iconAnchor:[6,6]
+            iconSize:[10,10],
+            iconAnchor:[5,5]
         });
 
         const marker = L.marker(
@@ -862,80 +682,48 @@ function render(data){
 
             { icon }
 
-        ).addTo(layer);
+        );
 
         marker.bindPopup(`
 
-            <div class="popup-card">
+            <div class="popup">
 
                 <div class="popup-header">
 
-                    <div>
+                    <div class="popup-title">
+                        ${branch}
+                    </div>
 
-                        <div class="popup-title">
-                            ${branch}
-                        </div>
-
-                        <div class="popup-status ${statusClass}">
-                            ${statusText}
-                        </div>
-
+                    <div class="popup-status ${statusClass}">
+                        ${statusText}
                     </div>
 
                 </div>
 
-                <div class="popup-grid">
+                <div class="stats">
 
-                    <div class="popup-box">
+                    <div class="stat">
 
-                        <div class="popup-label">
-                            Total Balance
+                        <div class="stat-label">
+                            Balance
                         </div>
 
-                        <div class="popup-currency">
-                            LKR
-                        </div>
-
-                        <div class="popup-value">
-                            ${balance.toLocaleString()}
+                        <div class="stat-value">
+                            ${money(balance)}
                         </div>
 
                     </div>
 
-                    <div class="popup-box">
+                    <div class="stat">
 
-                        <div class="popup-label">
-                            Credit Limit
+                        <div class="stat-label">
+                            Limit
                         </div>
 
-                        <div class="popup-currency">
-                            LKR
+                        <div class="stat-value">
+                            ${money(limit)}
                         </div>
 
-                        <div class="popup-value">
-                            ${limit.toLocaleString()}
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="utilization-header">
-
-                    <div class="utilization-label">
-                        Utilization
-                    </div>
-
-                    <div class="utilization-value">
-                        ${utilization}%
-                    </div>
-
-                </div>
-
-                <div class="progress">
-
-                    <div class="progress-fill"
-                        style="width:${Math.min(utilization,100)}%">
                     </div>
 
                 </div>
@@ -944,8 +732,12 @@ function render(data){
 
         `);
 
+        marker.addTo(layer);
+
         bounds.push([lat,lng]);
-    });
+    }
+
+    /* UPDATE COUNTS */
 
     document.getElementById('okCount').innerText =
         okCount;
@@ -953,18 +745,20 @@ function render(data){
     document.getElementById('alertCount').innerText =
         alertCount;
 
+    /* FIT */
+
     if(bounds.length){
 
         map.fitBounds(bounds,{
 
-            padding:[40,40]
+            padding:[25,25]
         });
     }
 }
 
-/* =====================================================
+/* ======================================================
    UPDATE
-===================================================== */
+====================================================== */
 
 async function update(){
 
@@ -974,9 +768,9 @@ async function update(){
     render(data);
 }
 
-/* =====================================================
+/* ======================================================
    INIT
-===================================================== */
+====================================================== */
 
 window.onload = function(){
 
