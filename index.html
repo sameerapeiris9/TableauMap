@@ -14,157 +14,306 @@ href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
 <style>
 
+/* =========================
+   GLOBAL
+========================= */
+
 html,body{
     margin:0;
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#050816;
-    font-family:Inter,Segoe UI,Arial;
+    background:#070b17;
+    font-family:
+        Inter,
+        Segoe UI,
+        Arial,
+        sans-serif;
 }
 
 #map{
     width:100%;
     height:100%;
-    background:#050816;
+    background:#070b17;
 }
-
-/* REMOVE LEAFLET DEFAULT WHITE BG */
 
 .leaflet-container{
-    background:#050816;
+    background:#070b17;
 }
 
-/* HIDE ATTRIBUTION */
+/* REMOVE ATTRIBUTION */
 
 .leaflet-control-attribution{
-    display:none;
+    display:none !important;
 }
 
-/* MODERN GLOW MARKER */
+/* MODERN ZOOM CONTROL */
+
+.leaflet-control-zoom{
+
+    border:none !important;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.35) !important;
+
+    border-radius:14px !important;
+
+    overflow:hidden;
+
+    margin-top:20px !important;
+    margin-left:20px !important;
+}
+
+.leaflet-control-zoom a{
+
+    background:
+        rgba(10,16,30,.92) !important;
+
+    color:white !important;
+
+    border:none !important;
+
+    width:34px !important;
+    height:34px !important;
+    line-height:34px !important;
+
+    font-size:20px !important;
+
+    transition:.2s;
+}
+
+.leaflet-control-zoom a:hover{
+
+    background:#16233f !important;
+}
+
+/* =========================
+   MARKERS
+========================= */
 
 .marker-wrap{
+
+    width:12px;
+    height:12px;
+
     position:relative;
-    width:18px;
-    height:18px;
 }
 
-.marker-pulse{
+/* GLOW */
+
+.marker-glow{
+
     position:absolute;
-    width:18px;
-    height:18px;
+
+    width:12px;
+    height:12px;
+
     border-radius:50%;
-    animation:pulse 2.2s infinite;
+
+    filter:blur(7px);
+
     opacity:.55;
 }
 
+/* CORE */
+
 .marker-core{
+
     position:absolute;
-    width:18px;
-    height:18px;
+
+    width:12px;
+    height:12px;
+
     border-radius:50%;
-    border:2px solid rgba(255,255,255,.9);
+
+    border:1.5px solid rgba(255,255,255,.92);
+
     display:flex;
     align-items:center;
     justify-content:center;
+
     color:white;
-    font-size:10px;
+
+    font-size:7px;
     font-weight:700;
-    backdrop-filter:blur(4px);
+
     box-shadow:
-        0 0 12px rgba(255,255,255,.4),
-        0 0 24px currentColor;
+        0 0 10px rgba(255,255,255,.18);
 }
 
-/* SUCCESS */
+/* SAFE */
 
 .ok .marker-core{
-    background:#00d68f;
-    color:white;
+    background:#12d18e;
 }
 
-.ok .marker-pulse{
-    background:#00d68f;
+.ok .marker-glow{
+    background:#12d18e;
 }
 
 /* ALERT */
 
 .alert .marker-core{
-    background:#ff4d6d;
-    color:white;
+    background:#ff4f6d;
 }
 
-.alert .marker-pulse{
-    background:#ff4d6d;
+.alert .marker-glow{
+    background:#ff4f6d;
 }
 
-/* GLASS POPUP */
+/* =========================
+   POPUP CARD
+========================= */
 
 .leaflet-popup-content-wrapper{
-    background:rgba(10,14,30,.92);
+
+    background:
+        rgba(9,14,28,.96) !important;
+
     color:white;
-    border-radius:18px;
-    backdrop-filter:blur(12px);
-    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:20px;
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    backdrop-filter:blur(16px);
+
     box-shadow:
-        0 10px 40px rgba(0,0,0,.5);
+        0 20px 50px rgba(0,0,0,.45);
+
+    padding:0;
 }
 
 .leaflet-popup-tip{
-    background:rgba(10,14,30,.92);
+
+    background:
+        rgba(9,14,28,.96) !important;
 }
 
 .leaflet-popup-content{
-    margin:18px 20px;
-    min-width:180px;
+
+    margin:0 !important;
+
+    width:260px !important;
+}
+
+.popup-card{
+
+    padding:20px;
+}
+
+/* HEADER */
+
+.popup-header{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin-bottom:18px;
 }
 
 .popup-title{
+
     font-size:18px;
     font-weight:700;
-    margin-bottom:14px;
+
     color:white;
+
+    letter-spacing:.3px;
 }
 
-.popup-row{
-    display:flex;
-    justify-content:space-between;
-    margin-top:8px;
-    font-size:14px;
-}
+.popup-badge{
 
-.popup-label{
-    opacity:.7;
-}
+    padding:5px 10px;
 
-.popup-value{
+    border-radius:999px;
+
+    font-size:11px;
     font-weight:700;
 }
 
-/* ANIMATION */
+/* SAFE */
 
-@keyframes pulse{
+.badge-ok{
 
-    0%{
-        transform:scale(1);
-        opacity:.55;
-    }
+    background:
+        rgba(18,209,142,.18);
 
-    70%{
-        transform:scale(2.8);
-        opacity:0;
-    }
-
-    100%{
-        transform:scale(1);
-        opacity:0;
-    }
+    color:#12d18e;
 }
 
-/* SMOOTH MAP */
+/* ALERT */
 
-.leaflet-fade-anim .leaflet-popup{
-    transition:opacity .2s linear;
+.badge-alert{
+
+    background:
+        rgba(255,79,109,.18);
+
+    color:#ff4f6d;
+}
+
+/* STATS */
+
+.popup-stats{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:12px;
+}
+
+.stat-box{
+
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid rgba(255,255,255,.05);
+
+    border-radius:14px;
+
+    padding:14px;
+}
+
+.stat-label{
+
+    font-size:11px;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    opacity:.6;
+
+    margin-bottom:8px;
+}
+
+.stat-value{
+
+    font-size:16px;
+    font-weight:700;
+}
+
+/* REMOVE DEFAULT CLOSE BUTTON BG */
+
+.leaflet-container a.leaflet-popup-close-button{
+
+    color:white !important;
+
+    top:10px !important;
+    right:12px !important;
+
+    font-size:18px !important;
+}
+
+/* SMOOTH */
+
+.leaflet-popup{
+
+    transition:opacity .15s linear;
 }
 
 </style>
@@ -181,7 +330,7 @@ let map;
 let layer;
 
 /* =========================
-   MAP INIT
+   INIT MAP
 ========================= */
 
 function initMap(){
@@ -190,41 +339,50 @@ function initMap(){
 
         center:[7.8731,80.7718],
         zoom:8,
+
         zoomControl:true,
         attributionControl:false,
+
         preferCanvas:true
 
     });
 
-    /* DARK MODERN MAP */
+    /* MODERN DARK TILE */
 
     L.tileLayer(
+
         'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+
         {
             maxZoom:19
         }
+
     ).addTo(map);
 
     layer = L.layerGroup().addTo(map);
 }
 
 /* =========================
-   MONEY FORMAT
+   MONEY
 ========================= */
 
 function money(v){
 
-    return new Intl.NumberFormat('en-LK',{
+    return new Intl.NumberFormat(
 
-        style:'currency',
-        currency:'LKR',
-        maximumFractionDigits:0
+        'en-LK',
 
-    }).format(v);
+        {
+            style:'currency',
+            currency:'LKR',
+            maximumFractionDigits:0
+        }
+
+    ).format(v);
 }
 
 /* =========================
-   GET SUMMARY DATA
+   GET DATA
 ========================= */
 
 async function getSummaryDataTable(ws){
@@ -232,8 +390,10 @@ async function getSummaryDataTable(ws){
     let rows = [];
 
     const reader = await ws.getSummaryDataReaderAsync(
+
         undefined,
         { ignoreSelection:true }
+
     );
 
     for(let i=0; i<reader.pageCount; i++){
@@ -263,7 +423,7 @@ async function getSummaryDataTable(ws){
 }
 
 /* =========================
-   RENDER MAP
+   RENDER
 ========================= */
 
 function render(data){
@@ -333,15 +493,18 @@ function render(data){
         };
     });
 
-    /* VALID COORDS */
+    /* VALIDATE */
 
     const valid = processed.filter(d => {
 
         return (
+
             !isNaN(d.lat) &&
             !isNaN(d.lng) &&
+
             d.lat >= 5 &&
             d.lat <= 11 &&
+
             d.lng >= 79 &&
             d.lng <= 82
         );
@@ -349,19 +512,24 @@ function render(data){
 
     const bounds = [];
 
-    /* DRAW */
+    /* DRAW MARKERS */
 
     valid.forEach(d => {
 
-        const over = d.balance > d.limit;
+        const over =
+            d.balance > d.limit;
 
-        const statusClass = over
-            ? 'alert'
-            : 'ok';
+        const statusClass =
+            over ? 'alert' : 'ok';
 
-        const symbol = over
-            ? '!'
-            : '✓';
+        const symbol =
+            over ? '!' : '✓';
+
+        const badgeClass =
+            over ? 'badge-alert' : 'badge-ok';
+
+        const badgeText =
+            over ? 'Over Limit' : 'Healthy';
 
         const icon = L.divIcon({
 
@@ -371,7 +539,7 @@ function render(data){
 
                 <div class="marker-wrap ${statusClass}">
 
-                    <div class="marker-pulse"></div>
+                    <div class="marker-glow"></div>
 
                     <div class="marker-core">
                         ${symbol}
@@ -381,40 +549,62 @@ function render(data){
 
             `,
 
-            iconSize:[18,18],
-            iconAnchor:[9,9]
-
+            iconSize:[12,12],
+            iconAnchor:[6,6]
         });
 
         const marker = L.marker(
+
             [d.lat,d.lng],
+
             { icon }
+
         ).addTo(layer);
 
         marker.bindPopup(`
 
-            <div class="popup-title">
-                ${d.branch}
-            </div>
+            <div class="popup-card">
 
-            <div class="popup-row">
-                <div class="popup-label">
-                    Balance
+                <div class="popup-header">
+
+                    <div class="popup-title">
+                        ${d.branch}
+                    </div>
+
+                    <div class="popup-badge ${badgeClass}">
+                        ${badgeText}
+                    </div>
+
                 </div>
 
-                <div class="popup-value">
-                    ${money(d.balance)}
-                </div>
-            </div>
+                <div class="popup-stats">
 
-            <div class="popup-row">
-                <div class="popup-label">
-                    Limit
+                    <div class="stat-box">
+
+                        <div class="stat-label">
+                            Balance
+                        </div>
+
+                        <div class="stat-value">
+                            ${money(d.balance)}
+                        </div>
+
+                    </div>
+
+                    <div class="stat-box">
+
+                        <div class="stat-label">
+                            Limit
+                        </div>
+
+                        <div class="stat-value">
+                            ${money(d.limit)}
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div class="popup-value">
-                    ${money(d.limit)}
-                </div>
             </div>
 
         `);
@@ -447,7 +637,7 @@ async function update(){
 }
 
 /* =========================
-   INIT EXTENSION
+   INIT
 ========================= */
 
 window.onload = function(){
@@ -464,8 +654,11 @@ window.onload = function(){
         initMap();
 
         worksheet.addEventListener(
+
             tableau.TableauEventType.SummaryDataChanged,
+
             update
+
         );
 
         update();
