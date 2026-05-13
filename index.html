@@ -1,405 +1,567 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ComBank Modern Map</title>
 
-    <!-- Tableau Extensions API — must load before any tableau.* calls -->
-    <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+<meta charset="UTF-8" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0"/>
 
-    <style>
-        :root {
-            --bg:      #060e1c;
-            --surface: #0b1929;
-            --accent:  #00b4ff;
-            --safe:    #00e5a0;
-            --warn:    #ff4560;
-            --gold:    #ffd166;
-            --text:    #e8f4ff;
-            --muted:   #567799;
-            --border:  rgba(0,180,255,.15);
-        }
+<title>ComBank Modern Map</title>
 
-        *, *::before, *::after { box-sizing: border-box; }
-        body, html { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:'DM Mono', monospace; overflow:hidden; }
+<!-- Tableau Extensions API -->
+<script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
-        /* ── MAP ── */
-        #map { position:absolute; inset:0; z-index:1; background:var(--bg); }
-        .leaflet-tile { filter: brightness(0.4) saturate(0.5) contrast(1.1) hue-rotate(200deg); }
-        .leaflet-container { background: var(--bg) !important; }
+<!-- Leaflet -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
-        /* ── SHARED UI GLASS PANEL ── */
-        .ui-element {
-            position: absolute;
-            z-index: 1000;
-            pointer-events: auto;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: rgba(11,25,41,0.88);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-        /* ── SUMMARY BADGE ── */
-        #summary { top:20px; left:20px; padding:14px 22px; }
-        .sum-lbl  { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
-        .sum-val  { font-family:'Syne', sans-serif; font-size:30px; font-weight:800; color:var(--accent); line-height:1; margin-top:3px; }
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet">
 
-        /* ── LEGEND ── */
-        #legend { top:20px; right:20px; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
-        .leg-row { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text); }
-        .leg-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+<style>
 
-        /* ── LOADING OVERLAY ── */
-        #loader {
-            position:absolute; inset:0; z-index:2000;
-            display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
-            background:var(--bg); transition: opacity 0.5s;
-        }
-        #loader.hidden { opacity:0; pointer-events:none; }
-        .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.75s linear infinite; }
-        .loader-txt { font-size:12px; color:var(--muted); letter-spacing:1px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
+:root{
+    --bg:#060e1c;
+    --surface:#0b1929;
+    --accent:#00b4ff;
+    --safe:#00e5a0;
+    --warn:#ff4560;
+    --text:#e8f4ff;
+    --muted:#567799;
+    --border:rgba(0,180,255,.15);
+}
 
-        /* ── ERROR TOAST ── */
-        #toast {
-            position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
-            z-index:3000; background:#1a0a0a; border:1px solid var(--warn);
-            color:var(--warn); padding:10px 20px; border-radius:8px;
-            font-size:12px; opacity:0; transition:opacity 0.3s; pointer-events:none;
-            white-space:nowrap;
-        }
-        #toast.show { opacity:1; }
+*{
+    box-sizing:border-box;
+}
 
-        /* ── ANIMATED MARKER ── */
-        .marker-container { position:relative; width:44px; height:44px; cursor:pointer; }
-        .marker-ring {
-            position:absolute; inset:0; border-radius:50%;
-            border:2px solid currentColor;
-            animation: ripple 2s ease-out infinite;
-        }
-        .marker-ring.delay { animation-delay:0.7s; }
-        .marker-core {
-            position:absolute; inset:11px; border-radius:50%;
-            border:2px solid currentColor;
-            background:rgba(0,0,0,0.45);
-            display:flex; align-items:center; justify-content:center;
-            font-size:13px; font-weight:700;
-        }
-        @keyframes ripple {
-            0%   { transform:scale(0.5); opacity:0.8; }
-            100% { transform:scale(1.6); opacity:0; }
-        }
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Mono', monospace;
+}
 
-        /* ── BRANCH DETAIL PANEL ── */
-        #panel {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(24px);
-            width: min(92vw, 420px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #panel.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
+#map{
+    position:absolute;
+    inset:0;
+}
 
-        .panel-content { padding:20px 22px; }
-        .p-title {
-            font-family:'Syne', sans-serif; font-size:17px; font-weight:700;
-            margin-bottom:14px; padding-bottom:12px;
-            border-bottom:1px solid var(--border);
-            display:flex; align-items:center; gap:10px;
-        }
-        .p-status {
-            font-size:10px; padding:3px 8px; border-radius:20px;
-            font-family:'DM Mono', monospace; font-weight:400; letter-spacing:0.5px;
-        }
-        .status-over  { background:rgba(255,69,96,0.15);  color:var(--warn); border:1px solid rgba(255,69,96,0.3); }
-        .status-under { background:rgba(0,229,160,0.12); color:var(--safe); border:1px solid rgba(0,229,160,0.3); }
+.leaflet-container{
+    background:var(--bg);
+}
 
-        .p-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-        .stat-box { background:rgba(255,255,255,0.04); padding:11px 12px; border-radius:9px; border:1px solid var(--border); }
-        .stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-        .stat-val { font-size:15px; margin-top:5px; font-weight:500; }
+.leaflet-tile{
+    filter:
+        brightness(.45)
+        saturate(.6)
+        hue-rotate(200deg);
+}
 
-        .p-util-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:flex; justify-content:space-between; }
-        .progress-bg { height:7px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
-        .progress-fill { height:100%; border-radius:4px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+/* SUMMARY */
 
-        .p-close { position:absolute; top:14px; right:16px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px; padding:2px 6px; border-radius:4px; line-height:1; z-index:10; }
-        .p-close:hover { color:var(--text); }
-    </style>
+#summary{
+    position:absolute;
+    top:20px;
+    left:20px;
+    z-index:9999;
+
+    padding:16px 22px;
+
+    border-radius:16px;
+
+    background:rgba(11,25,41,.88);
+
+    border:1px solid var(--border);
+
+    backdrop-filter:blur(16px);
+}
+
+.sum-lbl{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:2px;
+}
+
+.sum-val{
+    font-size:34px;
+    color:var(--accent);
+    font-family:'Syne',sans-serif;
+    font-weight:800;
+}
+
+/* LEGEND */
+
+#legend{
+    position:absolute;
+    top:20px;
+    right:20px;
+    z-index:9999;
+
+    padding:14px 18px;
+
+    border-radius:16px;
+
+    background:rgba(11,25,41,.88);
+
+    border:1px solid var(--border);
+
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+
+    backdrop-filter:blur(16px);
+}
+
+.leg-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:12px;
+}
+
+.dot{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+}
+
+/* PANEL */
+
+#panel{
+    position:absolute;
+
+    left:50%;
+    bottom:30px;
+
+    transform:translateX(-50%);
+
+    width:380px;
+
+    z-index:9999;
+
+    border-radius:18px;
+
+    background:rgba(11,25,41,.92);
+
+    border:1px solid var(--border);
+
+    backdrop-filter:blur(18px);
+
+    padding:22px;
+
+    display:none;
+}
+
+#panel.active{
+    display:block;
+}
+
+.p-title{
+    font-size:20px;
+    font-family:'Syne',sans-serif;
+    margin-bottom:16px;
+}
+
+.stat{
+    margin-bottom:12px;
+}
+
+.stat-lbl{
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.stat-val{
+    font-size:18px;
+    margin-top:4px;
+}
+
+.progress{
+    width:100%;
+    height:10px;
+    border-radius:10px;
+    overflow:hidden;
+    background:rgba(255,255,255,.08);
+}
+
+.bar{
+    height:100%;
+    width:0%;
+}
+
+/* MARKER */
+
+.marker{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:12px;
+    font-weight:700;
+
+    border:2px solid white;
+
+    box-shadow:0 0 18px rgba(0,0,0,.5);
+}
+
+</style>
 </head>
+
 <body>
 
 <div id="map"></div>
 
-<!-- Loading overlay -->
-<div id="loader">
-    <div class="spinner"></div>
-    <div class="loader-txt">Connecting to Tableau…</div>
+<div id="summary">
+    <div class="sum-lbl">ACTIVE BRANCHES</div>
+    <div class="sum-val" id="count">0</div>
 </div>
 
-<!-- Summary badge -->
-<div id="summary" class="ui-element">
-    <div class="sum-lbl">Active Branches</div>
-    <div class="sum-val" id="count-display">—</div>
-</div>
+<div id="legend">
+    <div class="leg-row">
+        <div class="dot" style="background:#00e5a0"></div>
+        Within limit
+    </div>
 
-<!-- Legend -->
-<div id="legend" class="ui-element">
-    <div class="leg-row"><div class="leg-dot" style="background:var(--safe)"></div> Within limit</div>
-    <div class="leg-row"><div class="leg-dot" style="background:var(--warn)"></div> Over limit</div>
-</div>
-
-<!-- Branch detail panel -->
-<div id="panel" class="ui-element">
-    <button class="p-close" onclick="closePanel()">✕</button>
-    <div class="panel-content">
-        <div class="p-title">
-            <span id="p-name">Branch Details</span>
-            <span class="p-status" id="p-status"></span>
-        </div>
-        <div class="p-grid">
-            <div class="stat-box">
-                <div class="stat-lbl">Actual Balance</div>
-                <div class="stat-val" id="p-bal">—</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-lbl">Budget Limit</div>
-                <div class="stat-val" id="p-limit">—</div>
-            </div>
-        </div>
-        <div class="p-util-lbl">
-            <span>Utilization</span>
-            <span id="p-pct">—</span>
-        </div>
-        <div class="progress-bg">
-            <div id="p-bar" class="progress-fill"></div>
-        </div>
+    <div class="leg-row">
+        <div class="dot" style="background:#ff4560"></div>
+        Over limit
     </div>
 </div>
 
-<!-- Error toast -->
-<div id="toast"></div>
+<div id="panel">
 
-<!-- Leaflet MUST load before the script below -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <div class="p-title" id="p-name">
+        Branch
+    </div>
+
+    <div class="stat">
+        <div class="stat-lbl">Actual Balance</div>
+        <div class="stat-val" id="p-bal"></div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-lbl">Budget Limit</div>
+        <div class="stat-val" id="p-limit"></div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-lbl">Utilization</div>
+        <div class="stat-val" id="p-util"></div>
+    </div>
+
+    <div class="progress">
+        <div class="bar" id="bar"></div>
+    </div>
+
+</div>
 
 <script>
-/* ══════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════ */
+
+let map;
+let markersLayer;
+
+/* FORMAT */
+
 const fmt = v =>
-    new Intl.NumberFormat('en-LK', {
-        style: 'currency', currency: 'LKR', maximumFractionDigits: 0
-    }).format(v);
+    new Intl.NumberFormat(
+        'en-LK',
+        {
+            style:'currency',
+            currency:'LKR',
+            maximumFractionDigits:0
+        }
+    ).format(v);
 
-let toastTimer;
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
-}
+/* MAP */
 
-function hideLoader() {
-    document.getElementById('loader').classList.add('hidden');
-    setTimeout(() => document.getElementById('loader').remove(), 600);
-}
+function initMap(){
 
-let panelTimer;
-function closePanel() {
-    clearTimeout(panelTimer);
-    document.getElementById('panel').classList.remove('active');
-}
-
-/* ══════════════════════════════════════════
-   MAP SETUP
-══════════════════════════════════════════ */
-let map, markersLayer;
-
-function initMap() {
-    map = L.map('map', {
-        center:           [7.87, 80.77],
-        zoom:             7,
-        zoomControl:      false,
-        attributionControl: false
+    map = L.map('map',{
+        center:[7.87,80.77],
+        zoom:7,
+        zoomControl:false,
+        attributionControl:false
     });
 
     L.tileLayer(
         'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        { maxZoom: 19 }
+        {
+            maxZoom:19
+        }
     ).addTo(map);
 
     markersLayer = L.layerGroup().addTo(map);
 }
 
-/* ══════════════════════════════════════════
-   DATA — reads SummaryData for the columns
-   that match each encoding by field-name
-══════════════════════════════════════════ */
+/* PARSE ROW */
 
-/**
- * Map a row array + columns array → a plain object.
- * We match on fieldName (case-insensitive substring) so the extension
- * works even if the user's field names aren't exact.
- */
-function parseRow(row, columns) {
+function parseRow(row, columns){
+
     const item = {};
+
     columns.forEach((col, i) => {
-        const fn = col.fieldName.toLowerCase();
+
+        const name = col.fieldName.toLowerCase();
+
         const cell = row[i];
 
-        if (fn.includes('lat'))     item.lat   = cell.nativeValue;
-        if (fn.includes('lon') || fn.includes('lng')) item.lng = cell.nativeValue;
-        if (fn.includes('branch'))  item.name  = cell.formattedValue || cell.nativeValue;
-        if (fn.includes('balance')) item.bal   = cell.nativeValue;
-        if (fn.includes('limit'))   item.limit = cell.nativeValue;
+        if(name.includes('branch')){
+            item.name =
+                cell.formattedValue ||
+                cell.nativeValue;
+        }
+
+        else if(name.includes('lat')){
+            item.lat =
+                Number(cell.nativeValue);
+        }
+
+        else if(
+            name.includes('lon') ||
+            name.includes('long')
+        ){
+            item.lng =
+                Number(cell.nativeValue);
+        }
+
+        else if(name.includes('balance')){
+            item.bal =
+                Number(cell.nativeValue);
+        }
+
+        else if(name.includes('limit')){
+            item.limit =
+                Number(cell.nativeValue);
+        }
+
     });
+
     return item;
 }
 
-async function fetchData(worksheet) {
-    /* ── getSummaryDataReaderAsync is the correct async reader API ── */
-    const reader  = await worksheet.getSummaryDataReaderAsync(
-        undefined,          // pageSize — undefined = default (10 000 rows/page)
-        { ignoreAliases: false, ignoreSelection: false }
-    );
+/* FETCH DATA */
 
-    const allRows = [];
-    for (let p = 0; p < reader.pageCount; p++) {
-        const page = await reader.getPageAsync(p);
+async function fetchData(worksheet){
+
+    const reader =
+        await worksheet.getSummaryDataReaderAsync();
+
+    const rows = [];
+
+    for(let p=0; p<reader.pageCount; p++){
+
+        const page =
+            await reader.getPageAsync(p);
+
         page.data.forEach(row => {
-            const item = parseRow(row, page.columns);
-            // Only keep rows that have all four required fields
-            if (item.lat != null && item.lng != null && item.name && item.bal != null) {
-                allRows.push(item);
+
+            const item =
+                parseRow(row, page.columns);
+
+            if(
+                item.lat != null &&
+                item.lng != null &&
+                item.name
+            ){
+                rows.push(item);
             }
+
         });
     }
 
     await reader.releaseAsync();
-    return allRows;
+
+    return rows;
 }
 
-/* ══════════════════════════════════════════
-   RENDER
-══════════════════════════════════════════ */
-function render(data) {
+/* PANEL */
+
+function showPanel(d){
+
+    document
+        .getElementById('panel')
+        .classList.add('active');
+
+    document.getElementById('p-name')
+        .innerText = d.name;
+
+    document.getElementById('p-bal')
+        .innerText = fmt(d.bal);
+
+    document.getElementById('p-limit')
+        .innerText =
+            d.limit != null
+            ? fmt(d.limit)
+            : 'N/A';
+
+    const util =
+        d.limit
+        ? Math.round((d.bal/d.limit)*100)
+        : 0;
+
+    document.getElementById('p-util')
+        .innerText = util + '%';
+
+    const bar =
+        document.getElementById('bar');
+
+    bar.style.width =
+        Math.min(util,100) + '%';
+
+    bar.style.background =
+        util > 100
+        ? '#ff4560'
+        : '#00e5a0';
+}
+
+/* RENDER */
+
+function render(data){
+
     markersLayer.clearLayers();
-    document.getElementById('count-display').innerText = data.length;
+
+    document.getElementById('count')
+        .innerText = data.length;
+
+    const bounds = [];
 
     data.forEach(d => {
-        const isOver  = d.limit != null ? d.bal > d.limit : false;
-        const color   = isOver ? '#ff4560' : '#00e5a0';
-        const symbol  = isOver ? '!' : '✓';
 
-        const icon = L.divIcon({
-            className: '',
-            html: `<div class="marker-container" style="color:${color}">
-                     <div class="marker-ring"></div>
-                     <div class="marker-ring delay"></div>
-                     <div class="marker-core">${symbol}</div>
-                   </div>`,
-            iconSize:   [44, 44],
-            iconAnchor: [22, 22],
-            popupAnchor:[0, -24]
-        });
+        const isOver =
+            d.limit != null
+            ? d.bal > d.limit
+            : false;
 
-        const marker = L.marker([d.lat, d.lng], { icon }).addTo(markersLayer);
-        marker.on('click', () => {
-            map.flyTo([d.lat, d.lng], 13, { duration: 1.4 });
+        const color =
+            isOver
+            ? '#ff4560'
+            : '#00e5a0';
+
+        const symbol =
+            isOver
+            ? '!'
+            : '✓';
+
+        const icon =
+            L.divIcon({
+                className:'',
+                html:`
+                    <div class="marker"
+                         style="
+                            background:${color};
+                            color:white;
+                         ">
+                         ${symbol}
+                    </div>
+                `,
+                iconSize:[28,28],
+                iconAnchor:[14,14]
+            });
+
+        const marker =
+            L.marker(
+                [d.lat,d.lng],
+                {icon}
+            );
+
+        marker.addTo(markersLayer);
+
+        marker.on('click',() => {
+
+            map.flyTo(
+                [d.lat,d.lng],
+                13,
+                {
+                    duration:1.2
+                }
+            );
+
             showPanel(d);
         });
-    });
-}
 
-/* ══════════════════════════════════════════
-   DETAIL PANEL
-══════════════════════════════════════════ */
-function showPanel(d) {
-    clearTimeout(panelTimer);
-    const panel  = document.getElementById('panel');
-    const bar    = document.getElementById('p-bar');
-    const isOver = d.limit != null ? d.bal > d.limit : false;
-    const ratio  = d.limit ? Math.min((d.bal / d.limit) * 100, 150) : 0; // allow >100 to show overflow
+        bounds.push([d.lat,d.lng]);
 
-    document.getElementById('p-name').innerText    = d.name;
-    document.getElementById('p-bal').innerText     = fmt(d.bal);
-    document.getElementById('p-limit').innerText   = d.limit != null ? fmt(d.limit) : 'N/A';
-    document.getElementById('p-pct').innerText     = d.limit ? Math.round((d.bal/d.limit)*100) + '%' : '—';
-
-    const statusEl = document.getElementById('p-status');
-    statusEl.textContent  = isOver ? 'OVER LIMIT' : 'WITHIN LIMIT';
-    statusEl.className    = 'p-status ' + (isOver ? 'status-over' : 'status-under');
-
-    // Reset bar width first so the CSS transition replays
-    bar.style.width      = '0%';
-    bar.style.background = isOver ? 'var(--warn)' : 'var(--safe)';
-    requestAnimationFrame(() => {
-        bar.style.width = Math.min(ratio, 100) + '%';
     });
 
-    panel.classList.add('active');
-
-    // Auto-hide after 7 s unless panel is hovered
-    panelTimer = setTimeout(() => {
-        if (!panel.matches(':hover')) closePanel();
-    }, 7000);
+    if(bounds.length){
+        map.fitBounds(bounds,{
+            padding:[40,40]
+        });
+    }
 }
 
-/* ══════════════════════════════════════════
-   TABLEAU INIT
-══════════════════════════════════════════ */
-tableau.extensions.initializeAsync().then(async () => {
+/* TABLEAU INIT */
+
+tableau.extensions.initializeAsync()
+.then(async () => {
 
     initMap();
 
-    const worksheet = tableau.extensions.worksheetContent.worksheet;
+    const dashboard =
+        tableau.extensions
+               .dashboardContent
+               .dashboard;
 
-    /* Main update function */
-    const update = async () => {
-        try {
-            const data = await fetchData(worksheet);
+    const worksheet =
+        dashboard.worksheets[0];
 
-            if (data.length === 0) {
-                showToast('No data returned — check field mappings on the Marks card.');
-            }
+    async function update(){
+
+        try{
+
+            const data =
+                await fetchData(worksheet);
+
+            console.log(data);
 
             render(data);
-        } catch (err) {
-            console.error('ComBank Map error:', err);
-            showToast('Error loading data: ' + (err.message || err));
-        }
-    };
 
-    /* Listen for filter / selection / data changes */
+        }catch(err){
+
+            console.error(err);
+
+            alert(
+                'Error loading data: ' +
+                err.message
+            );
+        }
+    }
+
     worksheet.addEventListener(
         tableau.TableauEventType.SummaryDataChanged,
         update
     );
 
-    /* Initial load */
     await update();
-    hideLoader();
 
-}).catch(err => {
-    console.error('Tableau init failed:', err);
-    hideLoader();
-    showToast('Could not connect to Tableau: ' + (err.message || err));
+})
+.catch(err => {
+
+    console.error(
+        'Initialization Error',
+        err
+    );
+
+    alert(
+        'Could not connect to Tableau'
+    );
 });
+
 </script>
+
 </body>
 </html>
