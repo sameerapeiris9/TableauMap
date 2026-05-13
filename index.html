@@ -10,7 +10,7 @@
 
 <title>ComBank Branch Map</title>
 
-<!-- Tableau -->
+<!-- Tableau Extensions API -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
 <!-- Leaflet -->
@@ -198,25 +198,28 @@ html,body{
 .bar{
     height:100%;
     width:0%;
+    transition:0.5s;
 }
 
 /* MARKER */
 
 .marker{
-    width:28px;
-    height:28px;
+    width:30px;
+    height:30px;
     border-radius:50%;
 
     display:flex;
     align-items:center;
     justify-content:center;
 
-    font-size:12px;
+    font-size:13px;
     font-weight:700;
 
     border:2px solid white;
 
-    box-shadow:0 0 18px rgba(0,0,0,.5);
+    box-shadow:
+        0 0 20px rgba(0,0,0,.5),
+        0 0 20px currentColor;
 }
 
 </style>
@@ -227,10 +230,21 @@ html,body{
 
 <div id="map"></div>
 
+<!-- SUMMARY -->
+
 <div id="summary">
-    <div class="sum-lbl">ACTIVE BRANCHES</div>
-    <div class="sum-val" id="count">0</div>
+
+    <div class="sum-lbl">
+        ACTIVE BRANCHES
+    </div>
+
+    <div class="sum-val" id="count">
+        0
+    </div>
+
 </div>
+
+<!-- LEGEND -->
 
 <div id="legend">
 
@@ -246,6 +260,8 @@ html,body{
 
 </div>
 
+<!-- PANEL -->
+
 <div id="panel">
 
     <div class="p-title" id="p-name">
@@ -253,17 +269,26 @@ html,body{
     </div>
 
     <div class="stat">
-        <div class="stat-lbl">Actual Balance</div>
+        <div class="stat-lbl">
+            Actual Balance
+        </div>
+
         <div class="stat-val" id="p-bal"></div>
     </div>
 
     <div class="stat">
-        <div class="stat-lbl">Budget Limit</div>
+        <div class="stat-lbl">
+            Budget Limit
+        </div>
+
         <div class="stat-val" id="p-limit"></div>
     </div>
 
     <div class="stat">
-        <div class="stat-lbl">Utilization</div>
+        <div class="stat-lbl">
+            Utilization
+        </div>
+
         <div class="stat-val" id="p-util"></div>
     </div>
 
@@ -275,10 +300,16 @@ html,body{
 
 <script>
 
+/* =========================================
+   GLOBALS
+========================================= */
+
 let map;
 let markersLayer;
 
-/* FORMAT */
+/* =========================================
+   FORMATTER
+========================================= */
 
 const fmt = v =>
     new Intl.NumberFormat(
@@ -290,7 +321,9 @@ const fmt = v =>
         }
     ).format(v);
 
-/* MAP */
+/* =========================================
+   MAP INIT
+========================================= */
 
 function initMap(){
 
@@ -311,7 +344,9 @@ function initMap(){
     markersLayer = L.layerGroup().addTo(map);
 }
 
-/* PARSE */
+/* =========================================
+   PARSE ROW
+========================================= */
 
 function parseRow(row, columns){
 
@@ -324,41 +359,72 @@ function parseRow(row, columns){
 
         const cell = row[i];
 
-        if(name.includes('branch')){
+        console.log(name, cell.nativeValue);
+
+        /* BRANCH */
+
+        if(
+            name.includes('branch')
+        ){
+
             item.name =
                 cell.formattedValue ||
                 cell.nativeValue;
         }
 
-        else if(name.includes('lat')){
+        /* LATITUDE */
+
+        else if(
+            name.includes('lat')
+        ){
+
             item.lat =
                 Number(cell.nativeValue);
         }
+
+        /* LONGITUDE */
 
         else if(
             name.includes('lon') ||
             name.includes('long')
         ){
+
             item.lng =
                 Number(cell.nativeValue);
         }
 
-        else if(name.includes('balance')){
+        /* BALANCE */
+
+        else if(
+            name.includes('balance') ||
+            name.includes('total') ||
+            name.includes('lcey')
+        ){
+
             item.bal =
                 Number(cell.nativeValue);
         }
 
-        else if(name.includes('limit')){
+        /* LIMIT */
+
+        else if(
+            name.includes('limit')
+        ){
+
             item.limit =
                 Number(cell.nativeValue);
         }
 
     });
 
+    console.log("PARSED ROW", item);
+
     return item;
 }
 
-/* FETCH */
+/* =========================================
+   FETCH DATA
+========================================= */
 
 async function fetchData(worksheet){
 
@@ -378,10 +444,11 @@ async function fetchData(worksheet){
                 parseRow(row, page.columns);
 
             if(
-                item.lat != null &&
-                item.lng != null &&
+                item.lat &&
+                item.lng &&
                 item.name
             ){
+
                 rows.push(item);
             }
 
@@ -393,7 +460,9 @@ async function fetchData(worksheet){
     return rows;
 }
 
-/* PANEL */
+/* =========================================
+   DETAIL PANEL
+========================================= */
 
 function showPanel(d){
 
@@ -405,7 +474,10 @@ function showPanel(d){
         .innerText = d.name;
 
     document.getElementById('p-bal')
-        .innerText = fmt(d.bal);
+        .innerText =
+            d.bal != null
+            ? fmt(d.bal)
+            : 'N/A';
 
     document.getElementById('p-limit')
         .innerText =
@@ -419,7 +491,8 @@ function showPanel(d){
         : 0;
 
     document.getElementById('p-util')
-        .innerText = util + '%';
+        .innerText =
+            util + '%';
 
     const bar =
         document.getElementById('bar');
@@ -433,7 +506,9 @@ function showPanel(d){
         : '#00e5a0';
 }
 
-/* RENDER */
+/* =========================================
+   RENDER
+========================================= */
 
 function render(data){
 
@@ -463,18 +538,23 @@ function render(data){
 
         const icon =
             L.divIcon({
+
                 className:'',
+
                 html:`
-                    <div class="marker"
-                         style="
+                    <div
+                        class="marker"
+                        style="
                             background:${color};
                             color:white;
-                         ">
-                         ${symbol}
+                        ">
+                        ${symbol}
                     </div>
                 `,
-                iconSize:[28,28],
-                iconAnchor:[14,14]
+
+                iconSize:[30,30],
+
+                iconAnchor:[15,15]
             });
 
         const marker =
@@ -504,15 +584,21 @@ function render(data){
 
     if(bounds.length){
 
-        map.fitBounds(bounds,{
-            padding:[40,40]
-        });
+        map.fitBounds(
+            bounds,
+            {
+                padding:[40,40]
+            }
+        );
     }
 }
 
-/* INIT */
+/* =========================================
+   TABLEAU INIT
+========================================= */
 
 tableau.extensions.initializeAsync()
+
 .then(async () => {
 
     initMap();
@@ -532,7 +618,7 @@ tableau.extensions.initializeAsync()
             const data =
                 await fetchData(worksheet);
 
-            console.log(data);
+            console.log("FINAL DATA", data);
 
             render(data);
 
@@ -556,6 +642,7 @@ tableau.extensions.initializeAsync()
     await update();
 
 })
+
 .catch(err => {
 
     console.error(err);
