@@ -3,9 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <title>ComBank Branch Map</title>
+
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
 <style>
 html,body{
     margin:0;
@@ -13,11 +18,14 @@ html,body{
     height:100%;
     overflow:hidden;
     background:#08111f;
+    font-family:Arial;
 }
+
 #map{
     width:100%;
     height:100%;
 }
+
 .marker{
     width:30px;
     height:30px;
@@ -29,8 +37,9 @@ html,body{
     font-size:14px;
     font-weight:bold;
     border:2px solid white;
-    box-shadow: 0 0 18px currentColor;
+    box-shadow:0 0 18px currentColor;
 }
+
 .summary{
     position:absolute;
     top:20px;
@@ -40,143 +49,232 @@ html,body{
     color:#00f2ff;
     padding:14px 20px;
     border-radius:14px;
-    font-family:Arial;
     font-size:30px;
     font-weight:bold;
 }
 </style>
 </head>
+
 <body>
+
 <div id="map"></div>
+
 <div class="summary">
     <span id="count">0</span>
 </div>
+
 <script>
+
 let worksheet;
 let map;
 let layer;
 
-/* MAP */
+/* =========================
+   INIT MAP
+========================= */
 function initMap(){
+
     map = L.map('map',{
-        center:[7.87,80.77],
+        center:[7.8731,80.7718],
         zoom:7,
         attributionControl:false
     });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        {
+            maxZoom:19
+        }
+    ).addTo(map);
+
     layer = L.layerGroup().addTo(map);
 }
 
-/* MONEY FORMATTER */
+/* =========================
+   MONEY FORMAT
+========================= */
 function money(v){
-    return new Intl.NumberFormat('en-LK', {
+
+    return new Intl.NumberFormat('en-LK',{
         style:'currency',
         currency:'LKR',
         maximumFractionDigits:0
     }).format(v);
 }
 
-/* GET DATA */
+/* =========================
+   GET SUMMARY DATA
+========================= */
 async function getSummaryDataTable(ws){
+
     let rows = [];
-    const reader = await ws.getSummaryDataReaderAsync(undefined, { ignoreSelection:true });
+
+    const reader = await ws.getSummaryDataReaderAsync(
+        undefined,
+        { ignoreSelection:true }
+    );
+
     for(let i=0; i<reader.pageCount; i++){
+
         const page = await reader.getPageAsync(i);
+
         rows = rows.concat(
             page.data.map(r => {
+
                 const row = {};
-                page.columns.forEach((col, idx) => {
+
+                page.columns.forEach((col,idx)=>{
                     row[col.fieldName] = r[idx];
                 });
+
                 return row;
             })
         );
     }
+
     await reader.releaseAsync();
+
     return rows;
 }
 
-/* GET ENCODINGS */
-async function getEncodingMap(ws){
-    const spec = await ws.getVisualSpecificationAsync();
-    const map = {};
-    if(spec.activeMarksSpecificationIndex < 0) return map;
-    
-    const marks = spec.marksSpecifications[spec.activeMarksSpecificationIndex];
-    marks.encodings.forEach(e => {
-        map[e.id] = e.field;
-    });
-    return map;
-}
+/* =========================
+   RENDER MAP
+========================= */
+function render(data){
 
-/* RENDER */
-function render(data, enc){
     layer.clearLayers();
-    
+
     const processed = data.map(d => {
-        // Find the limit field dynamically since it will be dropped on the Detail tile
-        const limitKey = Object.keys(d).find(k => k.toLowerCase().includes('limit'));
-        
+
+        const limitKey = Object.keys(d).find(
+            k => k.toLowerCase().includes('limit')
+        );
+
         return {
-            branch: enc.branch && d[enc.branch.name] ? d[enc.branch.name].formattedValue : 'Unknown',
-            lat: enc.latitude && d[enc.latitude.name] ? Number(d[enc.latitude.name].nativeValue) : NaN,
-            lng: enc.longitude && d[enc.longitude.name] ? Number(d[enc.longitude.name].nativeValue) : NaN,
-            balance: enc.balance && d[enc.balance.name] ? Number(d[enc.balance.name].nativeValue) : 0,
-            limit: limitKey && d[limitKey] ? Number(d[limitKey].nativeValue) : 0
+
+            branch: d["branch"]
+                ? d["branch"].formattedValue
+                : "Unknown",
+
+            lat: d["latitude"]
+                ? Number(d["latitude"].nativeValue)
+                : NaN,
+
+            lng: d["longitude"]
+                ? Number(d["longitude"].nativeValue)
+                : NaN,
+
+            balance: d["balance"]
+                ? Number(d["balance"].nativeValue)
+                : 0,
+
+            limit: limitKey && d[limitKey]
+                ? Number(d[limitKey].nativeValue)
+                : 0
         };
     });
 
     console.log(processed);
-    
-    const valid = processed.filter(d => !isNaN(d.lat) && !isNaN(d.lng));
+
+    const valid = processed.filter(d =>
+        !isNaN(d.lat) &&
+        !isNaN(d.lng)
+    );
+
     document.getElementById('count').innerText = valid.length;
-    
+
     const bounds = [];
+
     valid.forEach(d => {
+
         const over = d.balance > d.limit;
-        const color = over ? '#ff4560' : '#00e5a0';
-        const symbol = over ? '!' : '✓';
+
+        const color = over
+            ? '#ff4560'
+            : '#00e5a0';
+
+        const symbol = over
+            ? '!'
+            : '✓';
+
         const icon = L.divIcon({
             className:'',
-            html:`<div class="marker" style="background:${color}">${symbol}</div>`,
-            iconSize: [11],
-            iconAnchor: [12]
+            html:`
+                <div class="marker"
+                     style="background:${color}">
+                     ${symbol}
+                </div>
+            `,
+            iconSize:[30,30],
+            iconAnchor:[15,15]
         });
-        
-        const marker = L.marker([d.lat,d.lng], { icon }).addTo(layer);
+
+        const marker = L.marker(
+            [d.lat,d.lng],
+            { icon }
+        ).addTo(layer);
+
         marker.bindPopup(`
-            <b>${d.branch}</b><br><br>
-            Balance: ${money(d.balance)}<br>
+            <b>${d.branch}</b>
+            <br><br>
+            Balance: ${money(d.balance)}
+            <br>
             Limit: ${money(d.limit)}
         `);
+
         bounds.push([d.lat,d.lng]);
     });
-    
+
     if(bounds.length){
-        map.fitBounds(bounds,{ padding: [13] });
+
+        map.fitBounds(bounds,{
+            padding:[30,30]
+        });
     }
 }
 
-/* INIT */
-window.onload = function() {
-    tableau.extensions.initializeAsync().then(() => {
-        worksheet = tableau.extensions.worksheetContent.worksheet;
+/* =========================
+   UPDATE
+========================= */
+async function update(){
+
+    const data = await getSummaryDataTable(worksheet);
+
+    render(data);
+}
+
+/* =========================
+   INIT EXTENSION
+========================= */
+window.onload = function(){
+
+    tableau.extensions.initializeAsync()
+    .then(() => {
+
+        worksheet =
+            tableau.extensions
+            .worksheetContent
+            .worksheet;
+
         initMap();
-        
-        const update = async () => {
-            const [data, encodings] = await Promise.all([
-                getSummaryDataTable(worksheet),
-                getEncodingMap(worksheet)
-            ]);
-            render(data, encodings);
-        };
-        
-        worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, update);
+
+        worksheet.addEventListener(
+            tableau.TableauEventType.SummaryDataChanged,
+            update
+        );
+
         update();
-    }).catch((error) => {
-        console.error("Error initializing extension:", error);
+    })
+    .catch(error => {
+
+        console.error(
+            "Extension Initialization Error:",
+            error
+        );
     });
 };
+
 </script>
+
 </body>
 </html>
