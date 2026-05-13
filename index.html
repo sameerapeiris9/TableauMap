@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <title>ComBank Branch Map</title>
@@ -12,6 +13,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <style>
+
 html,body{
     margin:0;
     width:100%;
@@ -52,6 +54,7 @@ html,body{
     font-size:30px;
     font-weight:bold;
 }
+
 </style>
 </head>
 
@@ -72,6 +75,7 @@ let layer;
 /* =========================
    INIT MAP
 ========================= */
+
 function initMap(){
 
     map = L.map('map',{
@@ -93,6 +97,7 @@ function initMap(){
 /* =========================
    MONEY FORMAT
 ========================= */
+
 function money(v){
 
     return new Intl.NumberFormat('en-LK',{
@@ -105,6 +110,7 @@ function money(v){
 /* =========================
    GET SUMMARY DATA
 ========================= */
+
 async function getSummaryDataTable(ws){
 
     let rows = [];
@@ -119,12 +125,15 @@ async function getSummaryDataTable(ws){
         const page = await reader.getPageAsync(i);
 
         rows = rows.concat(
+
             page.data.map(r => {
 
                 const row = {};
 
                 page.columns.forEach((col,idx)=>{
+
                     row[col.fieldName] = r[idx];
+
                 });
 
                 return row;
@@ -138,11 +147,43 @@ async function getSummaryDataTable(ws){
 }
 
 /* =========================
+   GET ENCODINGS
+========================= */
+
+async function getEncodingMap(ws){
+
+    const spec = await ws.getVisualSpecificationAsync();
+
+    const map = {};
+
+    if(spec.activeMarksSpecificationIndex < 0)
+        return map;
+
+    const marks =
+        spec.marksSpecifications[
+            spec.activeMarksSpecificationIndex
+        ];
+
+    marks.encodings.forEach(e => {
+
+        console.log("ENCODING:", e);
+
+        map[e.id] = e.field;
+    });
+
+    return map;
+}
+
+/* =========================
    RENDER MAP
 ========================= */
-function render(data){
+
+function render(data, enc){
 
     layer.clearLayers();
+
+    console.log("ENCODINGS:", enc);
+    console.log("DATA:", data);
 
     const processed = data.map(d => {
 
@@ -150,31 +191,52 @@ function render(data){
             k => k.toLowerCase().includes('limit')
         );
 
+        const latField =
+            enc.latitude?.name ||
+            enc.latitude?.fieldName;
+
+        const lngField =
+            enc.longitude?.name ||
+            enc.longitude?.fieldName;
+
+        const branchField =
+            enc.branch?.name ||
+            enc.branch?.fieldName;
+
+        const balanceField =
+            enc.balance?.name ||
+            enc.balance?.fieldName;
+
         return {
 
-            branch: d["branch"]
-                ? d["branch"].formattedValue
-                : "Unknown",
+            branch:
+                branchField && d[branchField]
+                    ? d[branchField].formattedValue
+                    : "Unknown",
 
-            lat: d["latitude"]
-                ? Number(d["latitude"].nativeValue)
-                : NaN,
+            lat:
+                latField && d[latField]
+                    ? Number(d[latField].nativeValue)
+                    : NaN,
 
-            lng: d["longitude"]
-                ? Number(d["longitude"].nativeValue)
-                : NaN,
+            lng:
+                lngField && d[lngField]
+                    ? Number(d[lngField].nativeValue)
+                    : NaN,
 
-            balance: d["balance"]
-                ? Number(d["balance"].nativeValue)
-                : 0,
+            balance:
+                balanceField && d[balanceField]
+                    ? Number(d[balanceField].nativeValue)
+                    : 0,
 
-            limit: limitKey && d[limitKey]
-                ? Number(d[limitKey].nativeValue)
-                : 0
+            limit:
+                limitKey && d[limitKey]
+                    ? Number(d[limitKey].nativeValue)
+                    : 0
         };
     });
 
-    console.log(processed);
+    console.log("PROCESSED:", processed);
 
     const valid = processed.filter(d =>
         !isNaN(d.lat) &&
@@ -236,19 +298,27 @@ function render(data){
 /* =========================
    UPDATE
 ========================= */
+
 async function update(){
 
-    const data = await getSummaryDataTable(worksheet);
+    const [data, encodings] = await Promise.all([
 
-    render(data);
+        getSummaryDataTable(worksheet),
+        getEncodingMap(worksheet)
+
+    ]);
+
+    render(data, encodings);
 }
 
 /* =========================
    INIT EXTENSION
 ========================= */
+
 window.onload = function(){
 
     tableau.extensions.initializeAsync()
+
     .then(() => {
 
         worksheet =
@@ -265,6 +335,7 @@ window.onload = function(){
 
         update();
     })
+
     .catch(error => {
 
         console.error(
