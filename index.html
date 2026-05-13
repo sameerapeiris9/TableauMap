@@ -147,72 +147,66 @@ async function getSummaryDataTable(ws){
 }
 
 /* =========================
-   GET ENCODINGS
-========================= */
-
-async function getEncodingMap(ws){
-
-    const spec = await ws.getVisualSpecificationAsync();
-
-    const map = {};
-
-    if(spec.activeMarksSpecificationIndex < 0)
-        return map;
-
-    const marks =
-        spec.marksSpecifications[
-            spec.activeMarksSpecificationIndex
-        ];
-
-    marks.encodings.forEach(e => {
-
-        console.log("ENCODING:", e);
-
-        map[e.id] = e.field;
-    });
-
-    return map;
-}
-
-/* =========================
    RENDER MAP
 ========================= */
 
-function render(data, enc){
+function render(data){
 
     layer.clearLayers();
 
-    console.log("ENCODINGS:", enc);
-    console.log("DATA:", data);
+    console.log("RAW DATA:", data);
+
+    if(!data.length){
+        return;
+    }
+
+    /* AUTO DETECT FIELDS */
+
+    const sample = data[0];
+
+    const keys = Object.keys(sample);
+
+    console.log("FIELDS:", keys);
+
+    const latField = keys.find(k =>
+        k.toLowerCase().includes('lat')
+    );
+
+    const lngField = keys.find(k =>
+        k.toLowerCase().includes('long') ||
+        k.toLowerCase().includes('lng') ||
+        k.toLowerCase().includes('loan')
+    );
+
+    const branchField = keys.find(k =>
+        k.toLowerCase().includes('branch')
+    );
+
+    const balanceField = keys.find(k =>
+        k.toLowerCase().includes('ttl') ||
+        k.toLowerCase().includes('balance')
+    );
+
+    const limitField = keys.find(k =>
+        k.toLowerCase().includes('limit')
+    );
+
+    console.log({
+        latField,
+        lngField,
+        branchField,
+        balanceField,
+        limitField
+    });
 
     const processed = data.map(d => {
-
-        const limitKey = Object.keys(d).find(
-            k => k.toLowerCase().includes('limit')
-        );
-
-        const latField =
-            enc.latitude?.name ||
-            enc.latitude?.fieldName;
-
-        const lngField =
-            enc.longitude?.name ||
-            enc.longitude?.fieldName;
-
-        const branchField =
-            enc.branch?.name ||
-            enc.branch?.fieldName;
-
-        const balanceField =
-            enc.balance?.name ||
-            enc.balance?.fieldName;
 
         return {
 
             branch:
                 branchField && d[branchField]
                     ? d[branchField].formattedValue
-                    : "Unknown",
+                    : 'Unknown',
 
             lat:
                 latField && d[latField]
@@ -230,8 +224,8 @@ function render(data, enc){
                     : 0,
 
             limit:
-                limitKey && d[limitKey]
-                    ? Number(d[limitKey].nativeValue)
+                limitField && d[limitField]
+                    ? Number(d[limitField].nativeValue)
                     : 0
         };
     });
@@ -264,7 +258,7 @@ function render(data, enc){
             html:`
                 <div class="marker"
                      style="background:${color}">
-                     ${symbol}
+                    ${symbol}
                 </div>
             `,
             iconSize:[30,30],
@@ -301,14 +295,10 @@ function render(data, enc){
 
 async function update(){
 
-    const [data, encodings] = await Promise.all([
+    const data =
+        await getSummaryDataTable(worksheet);
 
-        getSummaryDataTable(worksheet),
-        getEncodingMap(worksheet)
-
-    ]);
-
-    render(data, encodings);
+    render(data);
 }
 
 /* =========================
