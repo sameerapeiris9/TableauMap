@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>ComBank Branch Map</title>
+<title>ComBank Smart Branch Map</title>
 
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
@@ -19,40 +19,152 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#08111f;
-    font-family:Arial;
+    background:#050816;
+    font-family:Inter,Segoe UI,Arial;
 }
 
 #map{
     width:100%;
     height:100%;
+    background:#050816;
 }
 
-.marker{
-    width:30px;
-    height:30px;
+/* REMOVE LEAFLET DEFAULT WHITE BG */
+
+.leaflet-container{
+    background:#050816;
+}
+
+/* HIDE ATTRIBUTION */
+
+.leaflet-control-attribution{
+    display:none;
+}
+
+/* MODERN GLOW MARKER */
+
+.marker-wrap{
+    position:relative;
+    width:18px;
+    height:18px;
+}
+
+.marker-pulse{
+    position:absolute;
+    width:18px;
+    height:18px;
     border-radius:50%;
+    animation:pulse 2.2s infinite;
+    opacity:.55;
+}
+
+.marker-core{
+    position:absolute;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.9);
     display:flex;
     align-items:center;
     justify-content:center;
     color:white;
-    font-size:14px;
-    font-weight:bold;
-    border:2px solid white;
-    box-shadow:0 0 18px currentColor;
+    font-size:10px;
+    font-weight:700;
+    backdrop-filter:blur(4px);
+    box-shadow:
+        0 0 12px rgba(255,255,255,.4),
+        0 0 24px currentColor;
 }
 
-.summary{
-    position:absolute;
-    top:20px;
-    left:20px;
-    z-index:9999;
-    background:rgba(0,0,0,.75);
-    color:#00f2ff;
-    padding:14px 20px;
-    border-radius:14px;
-    font-size:30px;
-    font-weight:bold;
+/* SUCCESS */
+
+.ok .marker-core{
+    background:#00d68f;
+    color:white;
+}
+
+.ok .marker-pulse{
+    background:#00d68f;
+}
+
+/* ALERT */
+
+.alert .marker-core{
+    background:#ff4d6d;
+    color:white;
+}
+
+.alert .marker-pulse{
+    background:#ff4d6d;
+}
+
+/* GLASS POPUP */
+
+.leaflet-popup-content-wrapper{
+    background:rgba(10,14,30,.92);
+    color:white;
+    border-radius:18px;
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:
+        0 10px 40px rgba(0,0,0,.5);
+}
+
+.leaflet-popup-tip{
+    background:rgba(10,14,30,.92);
+}
+
+.leaflet-popup-content{
+    margin:18px 20px;
+    min-width:180px;
+}
+
+.popup-title{
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:14px;
+    color:white;
+}
+
+.popup-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    font-size:14px;
+}
+
+.popup-label{
+    opacity:.7;
+}
+
+.popup-value{
+    font-weight:700;
+}
+
+/* ANIMATION */
+
+@keyframes pulse{
+
+    0%{
+        transform:scale(1);
+        opacity:.55;
+    }
+
+    70%{
+        transform:scale(2.8);
+        opacity:0;
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:0;
+    }
+}
+
+/* SMOOTH MAP */
+
+.leaflet-fade-anim .leaflet-popup{
+    transition:opacity .2s linear;
 }
 
 </style>
@@ -62,10 +174,6 @@ html,body{
 
 <div id="map"></div>
 
-<div class="summary">
-    <span id="count">0</span>
-</div>
-
 <script>
 
 let worksheet;
@@ -73,16 +181,22 @@ let map;
 let layer;
 
 /* =========================
-   INIT MAP
+   MAP INIT
 ========================= */
 
 function initMap(){
 
     map = L.map('map',{
+
         center:[7.8731,80.7718],
-        zoom:7,
-        attributionControl:false
+        zoom:8,
+        zoomControl:true,
+        attributionControl:false,
+        preferCanvas:true
+
     });
+
+    /* DARK MODERN MAP */
 
     L.tileLayer(
         'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -101,9 +215,11 @@ function initMap(){
 function money(v){
 
     return new Intl.NumberFormat('en-LK',{
+
         style:'currency',
         currency:'LKR',
         maximumFractionDigits:0
+
     }).format(v);
 }
 
@@ -154,8 +270,6 @@ function render(data){
 
     layer.clearLayers();
 
-    console.log("RAW DATA:", data);
-
     if(!data.length){
         return;
     }
@@ -163,8 +277,6 @@ function render(data){
     const sample = data[0];
 
     const keys = Object.keys(sample);
-
-    console.log("FIELDS:", keys);
 
     /* FIELD DETECTION */
 
@@ -188,15 +300,7 @@ function render(data){
         k.toLowerCase().includes('limit')
     );
 
-    console.log({
-        branchField,
-        latField,
-        lngField,
-        balanceField,
-        limitField
-    });
-
-    /* PROCESS DATA */
+    /* PROCESS */
 
     const processed = data.map(d => {
 
@@ -229,9 +333,7 @@ function render(data){
         };
     });
 
-    console.table(processed);
-
-    /* VALIDATE COORDINATES */
+    /* VALID COORDS */
 
     const valid = processed.filter(d => {
 
@@ -245,36 +347,43 @@ function render(data){
         );
     });
 
-    /* UPDATE COUNT */
-
-    document.getElementById('count').innerText = valid.length;
-
     const bounds = [];
 
-    /* CREATE MARKERS */
+    /* DRAW */
 
     valid.forEach(d => {
 
         const over = d.balance > d.limit;
 
-        const color = over
-            ? '#ff4560'
-            : '#10e39a';
+        const statusClass = over
+            ? 'alert'
+            : 'ok';
 
         const symbol = over
             ? '!'
             : '✓';
 
         const icon = L.divIcon({
+
             className:'',
+
             html:`
-                <div class="marker"
-                     style="background:${color}">
-                    ${symbol}
+
+                <div class="marker-wrap ${statusClass}">
+
+                    <div class="marker-pulse"></div>
+
+                    <div class="marker-core">
+                        ${symbol}
+                    </div>
+
                 </div>
+
             `,
-            iconSize:[30,30],
-            iconAnchor:[15,15]
+
+            iconSize:[18,18],
+            iconAnchor:[9,9]
+
         });
 
         const marker = L.marker(
@@ -283,32 +392,44 @@ function render(data){
         ).addTo(layer);
 
         marker.bindPopup(`
-            <div style="font-family:Arial">
-                <b style="font-size:20px">
-                    ${d.branch}
-                </b>
 
-                <br><br>
-
-                Balance:
-                <b>${money(d.balance)}</b>
-
-                <br>
-
-                Limit:
-                <b>${money(d.limit)}</b>
+            <div class="popup-title">
+                ${d.branch}
             </div>
+
+            <div class="popup-row">
+                <div class="popup-label">
+                    Balance
+                </div>
+
+                <div class="popup-value">
+                    ${money(d.balance)}
+                </div>
+            </div>
+
+            <div class="popup-row">
+                <div class="popup-label">
+                    Limit
+                </div>
+
+                <div class="popup-value">
+                    ${money(d.limit)}
+                </div>
+            </div>
+
         `);
 
         bounds.push([d.lat,d.lng]);
     });
 
-    /* AUTO ZOOM */
+    /* AUTO FIT */
 
     if(bounds.length){
 
         map.fitBounds(bounds,{
-            padding:[30,30]
+
+            padding:[40,40]
+
         });
     }
 }
