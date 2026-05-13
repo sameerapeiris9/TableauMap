@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0"/>
 
-<title>ComBank Modern Map</title>
+<title>ComBank Branch Map</title>
 
-<!-- Tableau Extensions API -->
+<!-- Tableau -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
 <!-- Leaflet -->
@@ -219,6 +220,7 @@ html,body{
 }
 
 </style>
+
 </head>
 
 <body>
@@ -231,6 +233,7 @@ html,body{
 </div>
 
 <div id="legend">
+
     <div class="leg-row">
         <div class="dot" style="background:#00e5a0"></div>
         Within limit
@@ -240,6 +243,7 @@ html,body{
         <div class="dot" style="background:#ff4560"></div>
         Over limit
     </div>
+
 </div>
 
 <div id="panel">
@@ -307,7 +311,7 @@ function initMap(){
     markersLayer = L.layerGroup().addTo(map);
 }
 
-/* PARSE ROW */
+/* PARSE */
 
 function parseRow(row, columns){
 
@@ -315,7 +319,8 @@ function parseRow(row, columns){
 
     columns.forEach((col, i) => {
 
-        const name = col.fieldName.toLowerCase();
+        const name =
+            col.fieldName.toLowerCase();
 
         const cell = row[i];
 
@@ -353,7 +358,7 @@ function parseRow(row, columns){
     return item;
 }
 
-/* FETCH DATA */
+/* FETCH */
 
 async function fetchData(worksheet){
 
@@ -498,13 +503,14 @@ function render(data){
     });
 
     if(bounds.length){
+
         map.fitBounds(bounds,{
             padding:[40,40]
         });
     }
 }
 
-/* TABLEAU INIT */
+/* INIT */
 
 tableau.extensions.initializeAsync()
 .then(async () => {
@@ -530,7 +536,8 @@ tableau.extensions.initializeAsync()
 
             render(data);
 
-        }catch(err){
+        }
+        catch(err){
 
             console.error(err);
 
@@ -551,10 +558,7 @@ tableau.extensions.initializeAsync()
 })
 .catch(err => {
 
-    console.error(
-        'Initialization Error',
-        err
-    );
+    console.error(err);
 
     alert(
         'Could not connect to Tableau'
