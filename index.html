@@ -3,10 +3,7 @@
 
 <head>
 
-<meta charset="UTF-8"/>
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
 
 <title>ComBank Branch Map</title>
 
@@ -21,41 +18,57 @@ href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
 html,body{
     margin:0;
+    width:100%;
     height:100%;
     overflow:hidden;
-    background:#06111f;
-    font-family:Arial;
+    background:#08111f;
 }
 
 #map{
-    height:100%;
     width:100%;
+    height:100%;
 }
 
 .marker{
-    width:28px;
-    height:28px;
+    width:30px;
+    height:30px;
+
     border-radius:50%;
+
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:12px;
-    font-weight:bold;
+
     color:white;
+
+    font-size:14px;
+    font-weight:bold;
+
     border:2px solid white;
-    box-shadow:0 0 20px currentColor;
+
+    box-shadow:
+        0 0 18px currentColor;
 }
 
 .summary{
     position:absolute;
+
     top:20px;
     left:20px;
+
     z-index:9999;
-    background:rgba(0,0,0,.7);
-    color:#00b4ff;
-    padding:15px 20px;
+
+    background:rgba(0,0,0,.75);
+
+    color:#00f2ff;
+
+    padding:14px 20px;
+
     border-radius:14px;
-    font-size:28px;
+
+    font-family:Arial;
+
+    font-size:30px;
     font-weight:bold;
 }
 
@@ -73,6 +86,7 @@ html,body{
 
 <script>
 
+let worksheet;
 let map;
 let layer;
 
@@ -93,7 +107,7 @@ function initMap(){
     layer = L.layerGroup().addTo(map);
 }
 
-/* FORMAT */
+/* MONEY */
 
 function money(v){
 
@@ -107,68 +121,116 @@ function money(v){
     ).format(v);
 }
 
-/* LOAD DATA */
+/* GET DATA */
 
-async function loadData(worksheet){
+async function getSummaryDataTable(ws){
+
+    let rows = [];
 
     const reader =
-        await worksheet.getSummaryDataReaderAsync();
+        await ws.getSummaryDataReaderAsync(
+            undefined,
+            { ignoreSelection:true }
+        );
 
-    const data = [];
-
-    for(let p=0; p<reader.pageCount; p++){
+    for(let i=0; i<reader.pageCount; i++){
 
         const page =
-            await reader.getPageAsync(p);
+            await reader.getPageAsync(i);
 
-        page.data.forEach(row => {
+        rows = rows.concat(
 
-            const item = {
-                branch:
-                    row[0].formattedValue,
+            page.data.map(r => {
 
-                lat:
-                    Number(row[1].value),
+                const row = {};
 
-                lng:
-                    Number(row[2].value),
+                page.columns.forEach((col, idx) => {
 
-                balance:
-                    Number(row[3].value),
+                    row[col.fieldName] = r[idx];
+                });
 
-                limit:
-                    Number(row[4].value)
-            };
-
-            console.log(item);
-
-            if(
-                !isNaN(item.lat) &&
-                !isNaN(item.lng)
-            ){
-                data.push(item);
-            }
-
-        });
+                return row;
+            })
+        );
     }
 
     await reader.releaseAsync();
 
-    return data;
+    return rows;
+}
+
+/* GET ENCODINGS */
+
+async function getEncodingMap(ws){
+
+    const spec =
+        await ws.getVisualSpecificationAsync();
+
+    const map = {};
+
+    if(spec.activeMarksSpecificationIndex < 0)
+        return map;
+
+    const marks =
+        spec.marksSpecifications[
+            spec.activeMarksSpecificationIndex
+        ];
+
+    marks.encodings.forEach(e => {
+
+        map[e.id] = e.field;
+    });
+
+    return map;
 }
 
 /* RENDER */
 
-function render(data){
+function render(data, enc){
 
     layer.clearLayers();
 
+    const processed =
+        data.map(d => ({
+
+            branch:
+                d[enc.branch.name]?.formattedValue,
+
+            lat:
+                Number(
+                    d[enc.latitude.name]?.nativeValue
+                ),
+
+            lng:
+                Number(
+                    d[enc.longitude.name]?.nativeValue
+                ),
+
+            balance:
+                Number(
+                    d[enc.balance.name]?.nativeValue
+                ),
+
+            limit:
+                Number(
+                    d[enc.limit.name]?.nativeValue
+                )
+        }));
+
+    console.log(processed);
+
+    const valid =
+        processed.filter(d =>
+            !isNaN(d.lat) &&
+            !isNaN(d.lng)
+        );
+
     document.getElementById('count')
-        .innerText = data.length;
+        .innerText = valid.length;
 
     const bounds = [];
 
-    data.forEach(d => {
+    valid.forEach(d => {
 
         const over =
             d.balance > d.limit;
@@ -189,20 +251,23 @@ function render(data){
                 className:'',
 
                 html:`
-                    <div class="marker"
-                    style="background:${color}">
+                    <div
+                        class="marker"
+                        style="
+                            background:${color}
+                        ">
                         ${symbol}
                     </div>
                 `,
 
-                iconSize:[28,28],
-                iconAnchor:[14,14]
+                iconSize:[30,30],
+                iconAnchor:[15,15]
             });
 
         const marker =
             L.marker(
                 [d.lat,d.lng],
-                {icon}
+                { icon }
             ).addTo(layer);
 
         marker.bindPopup(`
@@ -222,57 +287,49 @@ function render(data){
     if(bounds.length){
 
         map.fitBounds(bounds,{
-            padding:[50,50]
+            padding:[40,40]
         });
     }
 }
 
 /* INIT */
 
+window.onload =
 tableau.extensions.initializeAsync()
 
-.then(async () => {
+.then(() => {
+
+    worksheet =
+        tableau.extensions
+               .worksheetContent
+               .worksheet;
 
     initMap();
 
-    const worksheet =
-        tableau.extensions
-        .worksheetContent
-        .worksheet;
+    const update = async () => {
 
-    async function update(){
+        const [data, encodings] =
+            await Promise.all([
 
-        try{
+                getSummaryDataTable(
+                    worksheet
+                ),
 
-            const data =
-                await loadData(worksheet);
+                getEncodingMap(
+                    worksheet
+                )
+            ]);
 
-            render(data);
-
-        }
-        catch(err){
-
-            console.error(err);
-
-            alert(err.message);
-        }
-    }
+        render(data, encodings);
+    };
 
     worksheet.addEventListener(
-        tableau.TableauEventType.SummaryDataChanged,
+        tableau.TableauEventType
+               .SummaryDataChanged,
         update
     );
 
-    await update();
-
-})
-
-.catch(err => {
-
-    console.error(err);
-
-    alert(err.message);
-
+    update();
 });
 
 </script>
