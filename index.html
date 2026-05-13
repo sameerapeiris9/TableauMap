@@ -3,10 +3,10 @@
 
 <head>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ComBank Branch Intelligence Map</title>
+<title>ComBank Fast Branch Map</title>
 
 <!-- TABLEAU -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
@@ -19,165 +19,104 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 
-/* =====================================================
+/* ======================================================
    GLOBAL
-===================================================== */
+====================================================== */
 
 html,
 body{
+
     margin:0;
     width:100%;
     height:100%;
     overflow:hidden;
+
+    background:#07111f;
 
     font-family:
         Inter,
         Segoe UI,
         Arial,
         sans-serif;
-
-    background:#07131f;
 }
 
 #map{
+
     width:100%;
     height:100%;
 }
 
+/* ======================================================
+   PERFORMANCE OPTIMIZED MAP
+====================================================== */
+
 .leaflet-container{
-    background:#07131f;
+
+    background:#07111f;
 }
 
+/* REMOVE ATTRIBUTION */
+
 .leaflet-control-attribution{
+
     display:none !important;
 }
 
-/* =====================================================
-   PERFORMANCE TUNING
-===================================================== */
-
-.leaflet-pane,
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-tile{
-    will-change:auto !important;
-}
-
-.leaflet-fade-anim .leaflet-popup{
-    transition:none !important;
-}
-
-/* =====================================================
-   MAP STYLE
-===================================================== */
-
-.map-gradient{
-
-    position:absolute;
-
-    inset:0;
-
-    z-index:300;
-
-    pointer-events:none;
-
-    background:
-
-        radial-gradient(
-            circle at top left,
-            rgba(0,194,255,.14),
-            transparent 30%
-        ),
-
-        radial-gradient(
-            circle at bottom right,
-            rgba(16,216,118,.10),
-            transparent 28%
-        );
-}
-
-/* =====================================================
+/* ======================================================
    GLASS PANEL
-===================================================== */
+====================================================== */
 
 .glass{
 
     background:
-        rgba(5,16,28,.78);
-
-    backdrop-filter:
-        blur(10px);
+        rgba(6,18,35,.78);
 
     border:
         1px solid rgba(255,255,255,.06);
 
+    backdrop-filter:
+        blur(10px);
+
     box-shadow:
-        0 8px 28px rgba(0,0,0,.30);
+        0 8px 25px rgba(0,0,0,.28);
 }
 
-/* =====================================================
-   STATUS PANEL
-===================================================== */
+/* ======================================================
+   LEFT STATUS PANEL
+====================================================== */
 
-.dashboard-panel{
+.panel{
 
     position:absolute;
 
     top:14px;
     left:14px;
 
-    width:220px;
+    width:170px;
+
+    border-radius:16px;
 
     z-index:9999;
 
-    border-radius:18px;
-
-    overflow:hidden;
-}
-
-.panel-header{
-
-    padding:18px 18px 14px 18px;
-
-    border-bottom:
-        1px solid rgba(255,255,255,.06);
+    padding:16px;
 }
 
 .panel-title{
 
     color:white;
 
-    font-size:18px;
+    font-size:14px;
     font-weight:700;
-
-    margin-bottom:6px;
-}
-
-.panel-subtitle{
-
-    color:rgba(255,255,255,.55);
-
-    font-size:12px;
-}
-
-.panel-body{
-
-    padding:16px 18px 18px 18px;
-}
-
-.legend-row{
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
 
     margin-bottom:14px;
 }
 
-.legend-left{
+.legend{
 
     display:flex;
     align-items:center;
+
+    margin-bottom:10px;
 }
 
 .legend-dot{
@@ -191,26 +130,20 @@ body{
 }
 
 .dot-ok{
+
     background:#10d876;
 }
 
 .dot-alert{
+
     background:#ff4d67;
 }
 
-.legend-label{
+.legend-text{
 
-    color:rgba(255,255,255,.84);
+    color:rgba(255,255,255,.82);
 
-    font-size:13px;
-}
-
-.legend-value{
-
-    color:white;
-
-    font-size:13px;
-    font-weight:700;
+    font-size:12px;
 }
 
 .divider{
@@ -218,14 +151,45 @@ body{
     height:1px;
 
     background:
-        rgba(255,255,255,.06);
+        rgba(255,255,255,.08);
 
     margin:16px 0;
 }
 
-/* =====================================================
-   CLEAN FAST MARKERS
-===================================================== */
+.summary{
+
+    display:flex;
+    justify-content:space-between;
+
+    margin-bottom:10px;
+}
+
+.summary-label{
+
+    color:rgba(255,255,255,.7);
+
+    font-size:12px;
+}
+
+.summary-value{
+
+    font-size:12px;
+    font-weight:700;
+}
+
+.ok-value{
+
+    color:#10d876;
+}
+
+.alert-value{
+
+    color:#ff4d67;
+}
+
+/* ======================================================
+   FAST LIGHTWEIGHT MARKERS
+====================================================== */
 
 .branch-marker{
 
@@ -234,36 +198,35 @@ body{
 
     border-radius:50%;
 
-    border:2px solid rgba(255,255,255,.92);
-
-    box-shadow:
-        0 0 0 1px rgba(0,0,0,.18);
+    border:2px solid white;
 }
 
 .marker-ok{
+
     background:#10d876;
 }
 
 .marker-alert{
+
     background:#ff4d67;
 }
 
-/* =====================================================
-   MODERN POPUP CARD
-===================================================== */
+/* ======================================================
+   MODERN POPUP
+====================================================== */
 
 .leaflet-popup-content-wrapper{
 
     background:
-        rgba(7,19,33,.96) !important;
+        rgba(8,17,32,.94) !important;
 
-    border-radius:22px;
+    border-radius:16px;
 
     border:
         1px solid rgba(255,255,255,.06);
 
     box-shadow:
-        0 18px 55px rgba(0,0,0,.38);
+        0 14px 35px rgba(0,0,0,.32);
 
     padding:0;
 }
@@ -271,70 +234,52 @@ body{
 .leaflet-popup-tip{
 
     background:
-        rgba(7,19,33,.96) !important;
+        rgba(8,17,32,.94) !important;
 }
 
 .leaflet-popup-content{
 
     margin:0 !important;
 
-    width:340px !important;
+    width:260px !important;
 }
 
-.popup-card{
+.popup{
 
-    padding:22px;
+    padding:16px;
 }
 
-/* HEADER */
-
-.popup-top{
+.popup-header{
 
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
+    align-items:center;
 
-    margin-bottom:20px;
+    margin-bottom:16px;
 }
 
-.branch-info{
-
-    flex:1;
-
-    min-width:0;
-}
-
-.branch-name{
+.popup-title{
 
     color:white;
 
-    font-size:22px;
+    font-size:17px;
     font-weight:700;
-
-    line-height:1.25;
-
-    margin-bottom:10px;
 }
 
-.branch-status{
+.popup-status{
 
-    display:inline-flex;
-    align-items:center;
-
-    padding:6px 12px;
+    padding:5px 9px;
 
     border-radius:999px;
 
-    font-size:11px;
+    font-size:10px;
     font-weight:700;
-
-    letter-spacing:.3px;
 }
 
 .status-ok{
 
     background:
-        rgba(16,216,118,.14);
+        rgba(16,216,118,.18);
 
     color:#10d876;
 }
@@ -342,210 +287,60 @@ body{
 .status-alert{
 
     background:
-        rgba(255,77,103,.14);
+        rgba(255,77,103,.18);
 
     color:#ff4d67;
 }
 
-/* UTILIZATION CIRCLE */
+/* STATS */
 
-.util-box{
-
-    width:70px;
-    height:70px;
-
-    border-radius:50%;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
-    background:
-        linear-gradient(
-            180deg,
-            rgba(255,255,255,.05),
-            rgba(255,255,255,.02)
-        );
-
-    border:
-        1px solid rgba(255,255,255,.05);
-}
-
-.util-number{
-
-    color:white;
-
-    font-size:16px;
-    font-weight:700;
-}
-
-.util-label{
-
-    color:rgba(255,255,255,.55);
-
-    font-size:9px;
-
-    letter-spacing:.6px;
-
-    margin-top:2px;
-}
-
-/* KPI GRID */
-
-.kpi-grid{
+.stats{
 
     display:grid;
 
     grid-template-columns:1fr 1fr;
 
-    gap:14px;
-
-    margin-bottom:18px;
+    gap:10px;
 }
 
-.kpi-card{
+.stat{
 
     background:
-        linear-gradient(
-            180deg,
-            rgba(255,255,255,.05),
-            rgba(255,255,255,.025)
-        );
+        rgba(255,255,255,.04);
 
-    border:
-        1px solid rgba(255,255,255,.05);
+    border-radius:12px;
 
-    border-radius:16px;
-
-    padding:16px;
+    padding:12px;
 }
 
-.kpi-label{
+.stat-label{
 
-    color:rgba(255,255,255,.55);
-
-    font-size:11px;
-
-    margin-bottom:10px;
-
-    text-transform:uppercase;
-
-    letter-spacing:.8px;
-}
-
-.kpi-currency{
-
-    color:rgba(255,255,255,.45);
+    color:rgba(255,255,255,.6);
 
     font-size:10px;
 
     margin-bottom:6px;
+
+    text-transform:uppercase;
 }
 
-.kpi-value{
+.stat-value{
 
     color:white;
 
-    font-size:20px;
-    font-weight:700;
-
-    line-height:1.1;
-}
-
-/* PROGRESS */
-
-.progress-section{
-
-    margin-top:4px;
-}
-
-.progress-header{
-
-    display:flex;
-    justify-content:space-between;
-
-    margin-bottom:10px;
-}
-
-.progress-title{
-
-    color:rgba(255,255,255,.65);
-
-    font-size:12px;
-}
-
-.progress-value{
-
-    color:white;
-
-    font-size:12px;
+    font-size:15px;
     font-weight:700;
 }
 
-.progress-track{
-
-    width:100%;
-    height:8px;
-
-    border-radius:999px;
-
-    overflow:hidden;
-
-    background:
-        rgba(255,255,255,.06);
-}
-
-.progress-fill{
-
-    height:100%;
-
-    border-radius:999px;
-
-    transition:none;
-}
-
-.fill-ok{
-
-    background:
-        linear-gradient(
-            90deg,
-            #10d876,
-            #00c2ff
-        );
-}
-
-.fill-alert{
-
-    background:
-        linear-gradient(
-            90deg,
-            #ff4d67,
-            #ff7b54
-        );
-}
-
-/* CLOSE BUTTON */
-
-.leaflet-container a.leaflet-popup-close-button{
-
-    color:white !important;
-
-    top:12px !important;
-    right:14px !important;
-
-    font-size:18px !important;
-}
-
-/* =====================================================
-   ZOOM BUTTONS
-===================================================== */
+/* ======================================================
+   ZOOM CONTROL
+====================================================== */
 
 .leaflet-control-zoom{
 
     border:none !important;
 
-    border-radius:16px !important;
+    border-radius:14px !important;
 
     overflow:hidden;
 
@@ -553,30 +348,49 @@ body{
     margin-right:14px !important;
 
     box-shadow:
-        0 8px 24px rgba(0,0,0,.28);
+        0 8px 24px rgba(0,0,0,.24);
 }
 
 .leaflet-control-zoom a{
 
-    width:36px !important;
-    height:36px !important;
-    line-height:36px !important;
-
-    border:none !important;
-
     background:
         rgba(255,255,255,.95) !important;
 
-    color:#0f172a !important;
+    color:#111827 !important;
+
+    border:none !important;
+
+    width:34px !important;
+    height:34px !important;
+
+    line-height:34px !important;
 
     font-size:20px !important;
 }
 
 .leaflet-control-zoom a:hover{
 
-    background:#00c2ff !important;
+    background:#0ea5e9 !important;
 
     color:white !important;
+}
+
+/* ======================================================
+   PERFORMANCE IMPROVEMENTS
+====================================================== */
+
+/* disable heavy transitions */
+
+.leaflet-fade-anim .leaflet-popup{
+
+    transition:none !important;
+}
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon{
+
+    will-change:auto !important;
 }
 
 </style>
@@ -587,89 +401,69 @@ body{
 
 <div id="map"></div>
 
-<div class="map-gradient"></div>
+<!-- ======================================================
+     SIDE PANEL
+====================================================== -->
 
-<!-- =====================================================
-     STATUS PANEL
-===================================================== -->
+<div class="panel glass">
 
-<div class="dashboard-panel glass">
-
-    <div class="panel-header">
-
-        <div class="panel-title">
-            Branch Intelligence
-        </div>
-
-        <div class="panel-subtitle">
-            Real-time monitoring overview
-        </div>
-
+    <div class="panel-title">
+        Branch Status
     </div>
 
-    <div class="panel-body">
+    <div class="legend">
+        <div class="legend-dot dot-ok"></div>
+        <div class="legend-text">
+            Within Limit
+        </div>
+    </div>
 
-        <div class="legend-row">
+    <div class="legend">
+        <div class="legend-dot dot-alert"></div>
+        <div class="legend-text">
+            Over Limit
+        </div>
+    </div>
 
-            <div class="legend-left">
-                <div class="legend-dot dot-ok"></div>
-                <div class="legend-label">
-                    Within Limit
-                </div>
-            </div>
+    <div class="divider"></div>
 
-            <div class="legend-value" id="healthyCount">
-                0
-            </div>
-
+    <div class="summary">
+        <div class="summary-label">
+            Healthy
         </div>
 
-        <div class="legend-row">
+        <div class="summary-value ok-value"
+             id="okCount">
+            0
+        </div>
+    </div>
 
-            <div class="legend-left">
-                <div class="legend-dot dot-alert"></div>
-                <div class="legend-label">
-                    Over Limit
-                </div>
-            </div>
-
-            <div class="legend-value" id="riskCount">
-                0
-            </div>
-
+    <div class="summary">
+        <div class="summary-label">
+            Risk
         </div>
 
-        <div class="divider"></div>
-
-        <div class="legend-row">
-
-            <div class="legend-label">
-                Total Branches
-            </div>
-
-            <div class="legend-value" id="totalBranches">
-                0
-            </div>
-
+        <div class="summary-value alert-value"
+             id="alertCount">
+            0
         </div>
-
     </div>
 
 </div>
 
 <script>
 
-/* =====================================================
+/* ======================================================
    VARIABLES
-===================================================== */
+====================================================== */
 
 let worksheet;
 let map;
 let layer;
 
-/* =====================================================
-   INIT MAP
-===================================================== */
+/* ======================================================
+   FAST MAP INIT
+====================================================== */
 
 function initMap(){
 
@@ -681,20 +475,18 @@ function initMap(){
         zoomControl:true,
         attributionControl:false,
 
-        preferCanvas:true,
-
         fadeAnimation:false,
         zoomAnimation:true,
         markerZoomAnimation:false,
 
-        renderer:L.canvas()
+        preferCanvas:true
     });
 
-    /* FAST + BEAUTIFUL DARK MAP */
+    /* FAST LIGHT MAP */
 
     L.tileLayer(
 
-        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
         {
             maxZoom:18,
@@ -704,25 +496,12 @@ function initMap(){
 
     ).addTo(map);
 
-    /* LIGHT LABELS */
-
-    L.tileLayer(
-
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-
-        {
-            pane:'overlayPane',
-            updateWhenIdle:true
-        }
-
-    ).addTo(map);
-
     layer = L.layerGroup().addTo(map);
 }
 
-/* =====================================================
+/* ======================================================
    MONEY FORMAT
-===================================================== */
+====================================================== */
 
 function money(v){
 
@@ -739,9 +518,9 @@ function money(v){
     ).format(v);
 }
 
-/* =====================================================
-   GET DATA
-===================================================== */
+/* ======================================================
+   GET TABLEAU DATA
+====================================================== */
 
 async function getSummaryDataTable(ws){
 
@@ -780,9 +559,9 @@ async function getSummaryDataTable(ws){
     return rows;
 }
 
-/* =====================================================
-   RENDER
-===================================================== */
+/* ======================================================
+   RENDER MAP
+====================================================== */
 
 function render(data){
 
@@ -795,6 +574,8 @@ function render(data){
     const sample = data[0];
 
     const keys = Object.keys(sample);
+
+    /* FIELD DETECTION */
 
     const branchField = keys.find(k =>
         k.toLowerCase() === 'branch'
@@ -816,10 +597,12 @@ function render(data){
         k.toLowerCase().includes('limit')
     );
 
-    let healthy = 0;
-    let risk = 0;
+    let okCount = 0;
+    let alertCount = 0;
 
     const bounds = [];
+
+    /* DRAW */
 
     for(let i=0; i<data.length; i++){
 
@@ -828,7 +611,7 @@ function render(data){
         const branch =
             branchField && d[branchField]
                 ? d[branchField].formattedValue
-                : 'Unknown';
+                : "Unknown";
 
         const lat =
             latField && d[latField]
@@ -860,15 +643,10 @@ function render(data){
         const over = balance > limit;
 
         if(over){
-            risk++;
+            alertCount++;
         }else{
-            healthy++;
+            okCount++;
         }
-
-        const utilization =
-            limit > 0
-                ? ((balance / limit) * 100).toFixed(1)
-                : 0;
 
         const markerClass =
             over
@@ -880,11 +658,6 @@ function render(data){
                 ? 'status-alert'
                 : 'status-ok';
 
-        const fillClass =
-            over
-                ? 'fill-alert'
-                : 'fill-ok';
-
         const statusText =
             over
                 ? 'Over Limit'
@@ -895,7 +668,8 @@ function render(data){
             className:'',
 
             html:`
-                <div class="branch-marker ${markerClass}"></div>
+                <div class="branch-marker ${markerClass}">
+                </div>
             `,
 
             iconSize:[10,10],
@@ -906,99 +680,48 @@ function render(data){
 
             [lat,lng],
 
-            {
-                icon,
-                keyboard:false
-            }
+            { icon }
 
         );
 
         marker.bindPopup(`
 
-            <div class="popup-card">
+            <div class="popup">
 
-                <div class="popup-top">
+                <div class="popup-header">
 
-                    <div class="branch-info">
-
-                        <div class="branch-name">
-                            ${branch}
-                        </div>
-
-                        <div class="branch-status ${statusClass}">
-                            ${statusText}
-                        </div>
-
+                    <div class="popup-title">
+                        ${branch}
                     </div>
 
-                    <div class="util-box">
-
-                        <div class="util-number">
-                            ${utilization}%
-                        </div>
-
-                        <div class="util-label">
-                            UTILIZATION
-                        </div>
-
+                    <div class="popup-status ${statusClass}">
+                        ${statusText}
                     </div>
 
                 </div>
 
-                <div class="kpi-grid">
+                <div class="stats">
 
-                    <div class="kpi-card">
+                    <div class="stat">
 
-                        <div class="kpi-label">
+                        <div class="stat-label">
                             Balance
                         </div>
 
-                        <div class="kpi-currency">
-                            LKR
-                        </div>
-
-                        <div class="kpi-value">
-                            ${balance.toLocaleString()}
+                        <div class="stat-value">
+                            ${money(balance)}
                         </div>
 
                     </div>
 
-                    <div class="kpi-card">
+                    <div class="stat">
 
-                        <div class="kpi-label">
-                            Credit Limit
+                        <div class="stat-label">
+                            Limit
                         </div>
 
-                        <div class="kpi-currency">
-                            LKR
-                        </div>
-
-                        <div class="kpi-value">
-                            ${limit.toLocaleString()}
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="progress-section">
-
-                    <div class="progress-header">
-
-                        <div class="progress-title">
-                            Branch Exposure
-                        </div>
-
-                        <div class="progress-value">
-                            ${utilization}%
-                        </div>
-
-                    </div>
-
-                    <div class="progress-track">
-
-                        <div class="progress-fill ${fillClass}"
-                            style="width:${Math.min(utilization,100)}%">
+                        <div class="stat-value">
+                            ${money(limit)}
                         </div>
 
                     </div>
@@ -1007,37 +730,35 @@ function render(data){
 
             </div>
 
-        `,
-        {
-            closeButton:true,
-            autoPan:true
-        });
+        `);
 
         marker.addTo(layer);
 
         bounds.push([lat,lng]);
     }
 
-    document.getElementById('healthyCount').innerText =
-        healthy;
+    /* UPDATE COUNTS */
 
-    document.getElementById('riskCount').innerText =
-        risk;
+    document.getElementById('okCount').innerText =
+        okCount;
 
-    document.getElementById('totalBranches').innerText =
-        healthy + risk;
+    document.getElementById('alertCount').innerText =
+        alertCount;
+
+    /* FIT */
 
     if(bounds.length){
 
         map.fitBounds(bounds,{
+
             padding:[25,25]
         });
     }
 }
 
-/* =====================================================
+/* ======================================================
    UPDATE
-===================================================== */
+====================================================== */
 
 async function update(){
 
@@ -1047,9 +768,9 @@ async function update(){
     render(data);
 }
 
-/* =====================================================
+/* ======================================================
    INIT
-===================================================== */
+====================================================== */
 
 window.onload = function(){
 
@@ -1077,7 +798,7 @@ window.onload = function(){
     .catch(error => {
 
         console.error(
-            'Extension Initialization Error:',
+            "Extension Initialization Error:",
             error
         );
     });
