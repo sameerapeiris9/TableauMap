@@ -527,10 +527,6 @@ body{
 
 <div class="map-gradient"></div>
 
-<!-- =====================================================
-     PANEL
-===================================================== -->
-
 <div class="dashboard-panel glass">
 
     <div class="panel-header">
@@ -550,11 +546,13 @@ body{
         <div class="legend-row">
 
             <div class="legend-left">
+
                 <div class="legend-dot dot-ok"></div>
 
                 <div class="legend-label">
                     Healthy
                 </div>
+
             </div>
 
             <div class="legend-value"
@@ -567,11 +565,13 @@ body{
         <div class="legend-row">
 
             <div class="legend-left">
+
                 <div class="legend-dot dot-alert"></div>
 
                 <div class="legend-label">
                     Risk
                 </div>
+
             </div>
 
             <div class="legend-value"
@@ -627,12 +627,8 @@ function initMap(){
         markerZoomAnimation:false,
 
         zoomControl:true,
-        attributionControl:false,
-
-        renderer:L.canvas()
+        attributionControl:false
     });
-
-    /* FAST DARK MAP */
 
     L.tileLayer(
 
@@ -646,15 +642,9 @@ function initMap(){
 
     ).addTo(map);
 
-    /* LABELS */
-
     L.tileLayer(
 
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-
-        {
-            pane:'overlayPane'
-        }
+        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
 
     ).addTo(map);
 
@@ -662,26 +652,7 @@ function initMap(){
 }
 
 /* =====================================================
-   MONEY
-===================================================== */
-
-function money(v){
-
-    return new Intl.NumberFormat(
-
-        'en-LK',
-
-        {
-            style:'currency',
-            currency:'LKR',
-            maximumFractionDigits:0
-        }
-
-    ).format(v);
-}
-
-/* =====================================================
-   TABLEAU PARAMETER
+   PARAMETER UPDATE
 ===================================================== */
 
 async function setSelectedBranchParameter(branchCode){
@@ -694,21 +665,29 @@ async function setSelectedBranchParameter(branchCode){
         const parameters =
             await dashboard.getParametersAsync();
 
-        const parameter = parameters.find(p =>
-            p.name === "Selected Branch code"
+        const parameter =
+            parameters.find(p =>
+                p.name.trim().toLowerCase() ===
+                "selected branch code"
+            );
+
+        if(!parameter){
+
+            console.error(
+                "Parameter not found"
+            );
+
+            return;
+        }
+
+        await parameter.changeValueAsync(
+            String(branchCode)
         );
 
-        if(parameter){
-
-            await parameter.changeValueAsync(
-                branchCode
-            );
-
-            console.log(
-                "Parameter Updated:",
-                branchCode
-            );
-        }
+        console.log(
+            "Parameter Updated:",
+            branchCode
+        );
 
     }catch(error){
 
@@ -781,8 +760,7 @@ function render(data){
     );
 
     const branchCodeField = keys.find(k =>
-        k.toLowerCase().includes('branch code') ||
-        k.toLowerCase().includes('branchcode')
+        k.toLowerCase().includes('branch code')
     );
 
     const latField = keys.find(k =>
@@ -840,10 +818,7 @@ function render(data){
                 ? Number(d[limitField].nativeValue)
                 : 0;
 
-        if(
-            isNaN(lat) ||
-            isNaN(lng)
-        ){
+        if(isNaN(lat) || isNaN(lng)){
             continue;
         }
 
@@ -860,32 +835,12 @@ function render(data){
                 ? ((balance / limit) * 100).toFixed(1)
                 : 0;
 
-        const markerClass =
-            over
-                ? 'marker-alert'
-                : 'marker-ok';
-
-        const statusClass =
-            over
-                ? 'status-alert'
-                : 'status-ok';
-
-        const fillClass =
-            over
-                ? 'fill-alert'
-                : 'fill-ok';
-
-        const statusText =
-            over
-                ? 'Over Limit'
-                : 'Healthy';
-
         const icon = L.divIcon({
 
             className:'',
 
             html:`
-                <div class="branch-marker ${markerClass}"></div>
+                <div class="branch-marker ${over ? 'marker-alert' : 'marker-ok'}"></div>
             `,
 
             iconSize:[10,10],
@@ -903,18 +858,12 @@ function render(data){
 
         );
 
-        /* PARAMETER ACTION */
+        marker.on('click', function(){
 
-        marker.on('click', async () => {
-
-            console.log(
-                "Clicked Branch Code:",
+            setSelectedBranchParameter(
                 branchCode
             );
 
-            await setSelectedBranchParameter(
-                branchCode
-            );
         });
 
         marker.bindPopup(`
@@ -929,8 +878,8 @@ function render(data){
                             ${branch}
                         </div>
 
-                        <div class="branch-status ${statusClass}">
-                            ${statusText}
+                        <div class="branch-status ${over ? 'status-alert' : 'status-ok'}">
+                            ${over ? 'Over Limit' : 'Healthy'}
                         </div>
 
                     </div>
@@ -957,10 +906,6 @@ function render(data){
                             Balance
                         </div>
 
-                        <div class="kpi-currency">
-                            LKR
-                        </div>
-
                         <div class="kpi-value">
                             ${balance.toLocaleString()}
                         </div>
@@ -970,11 +915,7 @@ function render(data){
                     <div class="kpi-card">
 
                         <div class="kpi-label">
-                            Credit Limit
-                        </div>
-
-                        <div class="kpi-currency">
-                            LKR
+                            Limit
                         </div>
 
                         <div class="kpi-value">
@@ -987,7 +928,7 @@ function render(data){
 
                 <div class="progress-track">
 
-                    <div class="progress-fill ${fillClass}"
+                    <div class="progress-fill ${over ? 'fill-alert' : 'fill-ok'}"
                          style="width:${Math.min(utilization,100)}%">
                     </div>
 
@@ -1014,7 +955,6 @@ function render(data){
     if(bounds.length){
 
         map.fitBounds(bounds,{
-
             padding:[25,25]
         });
     }
