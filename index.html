@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ComBank Branch Map</title>
 
-<title>ComBank Fast Branch Map</title>
-
-<!-- TABLEAU -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
-
-<!-- LEAFLET -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-
 html, body {
     margin: 0; width: 100%; height: 100%;
     overflow: hidden; background: #07111f;
@@ -28,87 +22,58 @@ html, body {
 .leaflet-container { background: #07111f; }
 .leaflet-control-attribution { display: none !important; }
 
-/* ── GLASS ── */
-.glass {
+/* ── LEGEND (top-left, compact) ── */
+.legend-box {
+    position: absolute;
+    top: 14px; left: 14px;
+    z-index: 9999;
     background: rgba(6,18,35,.82);
     border: 1px solid rgba(255,255,255,.07);
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 25px rgba(0,0,0,.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
-/* ── LEFT PANEL ── */
-.panel {
-    position: absolute;
-    top: 14px; left: 14px;
-    width: 178px;
-    border-radius: 16px;
-    z-index: 9999;
-    padding: 16px;
+.leg-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.panel-title { color: white; font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+.leg-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
 
-.legend { display: flex; align-items: center; margin-bottom: 10px; }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
 .dot-ok    { background: #10d876; }
 .dot-alert { background: #ff4d67; }
-.legend-text { color: rgba(255,255,255,.82); font-size: 12px; }
 
-.divider { height: 1px; background: rgba(255,255,255,.08); margin: 14px 0; }
-
-.summary { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.summary-label { color: rgba(255,255,255,.7); font-size: 12px; }
-.summary-value { font-size: 12px; font-weight: 700; }
-.ok-value    { color: #10d876; }
-.alert-value { color: #ff4d67; }
-
-/* ── SELECTED BRANCH BADGE ── */
-.selected-badge {
-    margin-top: 2px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    background: rgba(14,165,233,.12);
-    border: 1px solid rgba(14,165,233,.25);
-    display: none;
-}
-.selected-label {
-    color: rgba(255,255,255,.45);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 4px;
-}
-.selected-name {
-    color: #38bdf8;
-    font-size: 12px;
-    font-weight: 700;
-    word-break: break-word;
+.leg-text {
+    color: rgba(255,255,255,.75);
+    font-size: 11px;
 }
 
-/* ── TOAST (info & error) ── */
+/* ── TOAST ── */
 #toast {
     position: absolute;
-    bottom: 20px; left: 50%;
+    bottom: 18px; left: 50%;
     transform: translateX(-50%);
     z-index: 99999;
-    padding: 8px 16px;
+    padding: 7px 14px;
     border-radius: 8px;
     font-size: 11px;
     white-space: nowrap;
     opacity: 0; pointer-events: none;
     transition: opacity 0.3s;
 }
-#toast.error {
-    background: rgba(255,77,103,.15);
-    border: 1px solid rgba(255,77,103,.4);
-    color: #ff4d67;
-}
-#toast.success {
-    background: rgba(16,216,118,.12);
-    border: 1px solid rgba(16,216,118,.3);
-    color: #10d876;
-}
-#toast.show { opacity: 1; }
+#toast.error   { background: rgba(255,77,103,.15); border: 1px solid rgba(255,77,103,.4); color: #ff4d67; }
+#toast.success { background: rgba(16,216,118,.12); border: 1px solid rgba(16,216,118,.3); color: #10d876; }
+#toast.show    { opacity: 1; }
 
 /* ── MARKERS ── */
 .branch-marker {
@@ -118,63 +83,59 @@ html, body {
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
 }
-.branch-marker:hover { transform: scale(1.5); }
+.branch-marker:hover { transform: scale(1.6); }
 .marker-ok    { background: #10d876; }
 .marker-alert { background: #ff4d67; }
 .marker-selected {
-    transform: scale(1.9) !important;
-    box-shadow: 0 0 0 3px rgba(56,189,248,.65), 0 0 12px rgba(56,189,248,.4);
+    transform: scale(2) !important;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.7), 0 0 14px rgba(56,189,248,.45);
 }
 
-/* ── POPUP ── */
-.leaflet-popup-content-wrapper {
+/* ── COMPACT TOOLTIP (replaces full popup) ── */
+.leaflet-tooltip {
     background: rgba(8,17,32,.95) !important;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,.07);
-    box-shadow: 0 14px 35px rgba(0,0,0,.35);
-    padding: 0;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35) !important;
+    padding: 0 !important;
+    color: white !important;
+    white-space: nowrap;
 }
-.leaflet-popup-tip { background: rgba(8,17,32,.95) !important; }
-.leaflet-popup-content { margin: 0 !important; width: 270px !important; }
 
-.popup { padding: 16px; }
-.popup-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 14px; gap: 8px;
-}
-.popup-title  { color: white; font-size: 16px; font-weight: 700; flex: 1; }
-.popup-status {
-    padding: 4px 9px; border-radius: 999px;
-    font-size: 10px; font-weight: 700;
-    white-space: nowrap; flex-shrink: 0;
-}
-.status-ok    { background: rgba(16,216,118,.18); color: #10d876; }
-.status-alert { background: rgba(255,77,103,.18);  color: #ff4d67; }
+/* Remove the default tooltip arrow */
+.leaflet-tooltip::before { display: none !important; }
 
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.stat { background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px 12px; }
-.stat-label { color: rgba(255,255,255,.55); font-size: 10px; text-transform: uppercase; margin-bottom: 5px; }
-.stat-value { color: white; font-size: 14px; font-weight: 700; }
-
-.util-row { margin-top: 4px; }
-.util-label {
-    display: flex; justify-content: space-between;
-    color: rgba(255,255,255,.5);
-    font-size: 10px; text-transform: uppercase; margin-bottom: 5px;
+.tip-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
 }
-.util-bg { height: 5px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
-.util-fill { height: 100%; border-radius: 3px; }
 
-.select-btn {
-    width: 100%; margin-top: 12px; padding: 9px;
-    border-radius: 10px; border: none;
-    background: rgba(14,165,233,.18); color: #38bdf8;
-    font-size: 12px; font-weight: 700;
-    cursor: pointer; font-family: inherit;
-    transition: background 0.15s; letter-spacing: 0.3px;
+.tip-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.select-btn:hover  { background: rgba(14,165,233,.3); }
-.select-btn.active { background: rgba(16,216,118,.18); color: #10d876; cursor: default; }
+
+.tip-bal {
+    font-size: 11px;
+    color: rgba(255,255,255,.6);
+    font-variant-numeric: tabular-nums;
+}
+
+.tip-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+.tip-ok    { background: rgba(16,216,118,.2); color: #10d876; }
+.tip-alert { background: rgba(255,77,103,.2); color: #ff4d67; }
 
 /* ── ZOOM CONTROL ── */
 .leaflet-control-zoom {
@@ -188,42 +149,21 @@ html, body {
     line-height: 34px !important; font-size: 20px !important;
 }
 .leaflet-control-zoom a:hover { background: #0ea5e9 !important; color: white !important; }
-.leaflet-fade-anim .leaflet-popup { transition: none !important; }
-
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<div class="panel glass">
-    <div class="panel-title">Branch Status</div>
-
-    <div class="legend">
-        <div class="legend-dot dot-ok"></div>
-        <div class="legend-text">Within Limit</div>
+<!-- Compact legend only — no summary counts -->
+<div class="legend-box">
+    <div class="leg-row">
+        <div class="leg-dot dot-ok"></div>
+        <div class="leg-text">Within Limit</div>
     </div>
-    <div class="legend">
-        <div class="legend-dot dot-alert"></div>
-        <div class="legend-text">Over Limit</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="summary">
-        <div class="summary-label">Healthy</div>
-        <div class="summary-value ok-value" id="okCount">0</div>
-    </div>
-    <div class="summary">
-        <div class="summary-label">Risk</div>
-        <div class="summary-value alert-value" id="alertCount">0</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="selected-badge" id="selectedBadge">
-        <div class="selected-label">Selected</div>
-        <div class="selected-name" id="selectedName">—</div>
+    <div class="leg-row">
+        <div class="leg-dot dot-alert"></div>
+        <div class="leg-text">Over Limit</div>
     </div>
 </div>
 
@@ -232,9 +172,10 @@ html, body {
 <script>
 
 /* ======================================================
-   CONFIG — match your Tableau parameter name exactly
+   CONFIG
 ====================================================== */
-const PARAM_NAME = 'selBranch';
+const PARAM_NAME    = 'selBranch';
+const DESEL_VALUE   = 'all';        // value sent when deselecting
 
 /* ======================================================
    STATE
@@ -242,8 +183,8 @@ const PARAM_NAME = 'selBranch';
 let worksheet;
 let map;
 let layer;
-let selectedBranch  = null;
-let markerRegistry  = {};   // { branchName → markerDivEl }
+let selectedBranch = null;
+let markerRegistry = {};   // { branchName → markerDivEl }
 
 /* ======================================================
    TOAST
@@ -254,71 +195,66 @@ function showToast(msg, type = 'error') {
     t.textContent = msg;
     t.className   = `${type} show`;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ======================================================
+   FORMAT — balance in millions
+====================================================== */
+function fmtM(v) {
+    const m = v / 1_000_000;
+    return (m >= 100 ? m.toFixed(0) : m >= 10 ? m.toFixed(1) : m.toFixed(2)) + 'M';
 }
 
 /* ======================================================
    SET PARAMETER
-   
-   Viz extensions run INSIDE a worksheet zone.
-   Parameters are fetched via worksheet.getParametersAsync(),
-   but changed via param.changeValueAsync() on the parameter object.
-   Do NOT use worksheet.changeParameterValueAsync() — it doesn't exist.
 ====================================================== */
-async function setParameter(branchName) {
+async function setParameter(value) {
     try {
-        /* ── Step 1: get all parameters visible to this worksheet ── */
         const params = await worksheet.getParametersAsync();
-
-        console.log(
-            'Parameters available:',
-            params.map(p => `"${p.name}" [${p.dataType}] = ${p.currentValue.formattedValue}`)
-        );
-
-        /* ── Step 2: find selBranch ── */
-        const param = params.find(p => p.name === PARAM_NAME);
+        const param  = params.find(p => p.name === PARAM_NAME);
 
         if (!param) {
             const names = params.map(p => `"${p.name}"`).join(', ');
-            showToast(`Parameter "${PARAM_NAME}" not found. Found: ${names || 'none'}`);
+            showToast(`Param "${PARAM_NAME}" not found. Have: ${names || 'none'}`);
             return;
         }
 
-        /* ── Step 3: change the value via the param object ── */
-        await param.changeValueAsync(branchName);
-
-        console.log(`✓ "${PARAM_NAME}" set to "${branchName}"`);
-
-        /* ── Step 4: update UI ── */
-        selectedBranch = branchName;
-        document.getElementById('selectedName').innerText      = branchName;
-        document.getElementById('selectedBadge').style.display = 'block';
-
-        showToast(`Selected: ${branchName}`, 'success');
-
-        /* ── Step 5: highlight selected marker ── */
-        Object.entries(markerRegistry).forEach(([name, el]) => {
-            el.classList.toggle('marker-selected', name === branchName);
-        });
+        await param.changeValueAsync(value);
+        console.log(`✓ ${PARAM_NAME} = "${value}"`);
 
     } catch (err) {
-        console.error('setParameter error:', err);
-        showToast('Parameter error: ' + (err.message || String(err)));
+        console.error('setParameter:', err);
+        showToast('Param error: ' + (err.message || String(err)));
     }
 }
 
 /* ======================================================
-   HANDLE SELECT (from marker click or popup button)
+   SELECT a branch
 ====================================================== */
-function handleSelectBranch(branchName) {
+function selectBranch(branchName) {
+    selectedBranch = branchName;
     setParameter(branchName);
 
-    /* update any open popup button immediately */
-    document.querySelectorAll('.select-btn').forEach(btn => {
-        const mine = btn.dataset.branch === branchName;
-        btn.textContent = mine ? '✓ Selected' : '⊕ Select Branch';
-        btn.classList.toggle('active', mine);
+    // Update marker highlights
+    Object.entries(markerRegistry).forEach(([name, el]) => {
+        el.classList.toggle('marker-selected', name === branchName);
     });
+}
+
+/* ======================================================
+   DESELECT — send "all", remove highlight
+====================================================== */
+function deselect() {
+    if (!selectedBranch) return;   // already deselected, skip redundant call
+    selectedBranch = null;
+    setParameter(DESEL_VALUE);
+
+    Object.values(markerRegistry).forEach(el => {
+        el.classList.remove('marker-selected');
+    });
+
+    console.log('Deselected → parameter set to "all"');
 }
 
 /* ======================================================
@@ -343,6 +279,17 @@ function initMap() {
     }).addTo(map);
 
     layer = L.layerGroup().addTo(map);
+
+    /* ── Click on empty map area → deselect ── */
+    map.on('click', function (e) {
+        // e.originalEvent.target is the element that was actually clicked.
+        // If it's the map canvas/tile (not a marker), deselect.
+        const target = e.originalEvent.target;
+        const isMarker = target.classList.contains('branch-marker');
+        if (!isMarker) {
+            deselect();
+        }
+    });
 }
 
 /* ======================================================
@@ -351,30 +298,24 @@ function initMap() {
 async function getSummaryDataTable(ws) {
     let rows = [];
     const reader = await ws.getSummaryDataReaderAsync(
-        undefined,
-        { ignoreSelection: true }
+        undefined, { ignoreSelection: true }
     );
-
     for (let i = 0; i < reader.pageCount; i++) {
         const page = await reader.getPageAsync(i);
         rows = rows.concat(
             page.data.map(r => {
                 const row = {};
-                page.columns.forEach((col, idx) => {
-                    row[col.fieldName] = r[idx];
-                });
+                page.columns.forEach((col, idx) => { row[col.fieldName] = r[idx]; });
                 return row;
             })
         );
     }
-
     await reader.releaseAsync();
     return rows;
 }
 
 /* ======================================================
    FIELD DETECTION
-   Handles Tableau prefixes like AVG(...), SUM(...), etc.
 ====================================================== */
 function findField(keys, ...needles) {
     for (const needle of needles) {
@@ -393,10 +334,9 @@ function render(data) {
     layer.clearLayers();
     markerRegistry = {};
 
-    if (!data.length) { showToast('No data — check Marks card fields.'); return; }
+    if (!data.length) { showToast('No data — check Marks card.'); return; }
 
     const keys = Object.keys(data[0]);
-
     const branchField  = findField(keys, 'branchname', 'branch');
     const latField     = findField(keys, 'latitude',  'lat');
     const lngField     = findField(keys, 'longitude', 'lon', 'lng');
@@ -405,7 +345,6 @@ function render(data) {
 
     console.log('Fields →', { branchField, latField, lngField, balanceField, limitField });
 
-    let okCount = 0, alertCount = 0;
     const bounds = [];
 
     data.forEach(d => {
@@ -417,16 +356,10 @@ function render(data) {
 
         if (isNaN(lat) || isNaN(lng)) return;
 
-        const over        = limit > 0 ? balance > limit : false;
-        const utilPct     = limit > 0 ? (balance / limit) * 100 : 0;
-        const utilDisplay = limit > 0 ? Math.round(utilPct) + '%' : 'N/A';
-        const barColor    = over ? '#ff4d67' : '#10d876';
-        const barWidth    = Math.min(utilPct, 100);
-        const isSelected  = branch === selectedBranch;
+        const over       = limit > 0 ? balance > limit : false;
+        const isSelected = branch === selectedBranch;
 
-        over ? alertCount++ : okCount++;
-
-        /* marker element — keep reference for highlight */
+        /* ── Marker dot ── */
         const markerEl = document.createElement('div');
         markerEl.className = `branch-marker ${over ? 'marker-alert' : 'marker-ok'}${isSelected ? ' marker-selected' : ''}`;
 
@@ -438,64 +371,42 @@ function render(data) {
 
         const marker = L.marker([lat, lng], { icon });
 
-        const safeB = branch.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-        marker.bindPopup(`
-            <div class="popup">
-                <div class="popup-header">
-                    <div class="popup-title">${branch}</div>
-                    <div class="popup-status ${over ? 'status-alert' : 'status-ok'}">
-                        ${over ? 'Over Limit' : 'Healthy'}
-                    </div>
+        /* ── Compact tooltip (sticky on click, hover on mouseover) ──
+           Shows: Branch Name  |  X.XXM  |  Within/Over Limit pill       */
+        const tipHtml = `
+            <div class="tip-inner">
+                <div>
+                    <div class="tip-name">${branch}</div>
+                    <div class="tip-bal">LKR ${fmtM(balance)}</div>
                 </div>
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-label">Balance</div>
-                        <div class="stat-value">${money(balance)}</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-label">Limit</div>
-                        <div class="stat-value">${limit > 0 ? money(limit) : '—'}</div>
-                    </div>
+                <div class="tip-status ${over ? 'tip-alert' : 'tip-ok'}">
+                    ${over ? 'Over Limit' : 'Within Limit'}
                 </div>
-                ${limit > 0 ? `
-                <div class="util-row">
-                    <div class="util-label">
-                        <span>Utilization</span><span>${utilDisplay}</span>
-                    </div>
-                    <div class="util-bg">
-                        <div class="util-fill" style="width:${barWidth}%;background:${barColor}"></div>
-                    </div>
-                </div>` : ''}
-                <button class="select-btn ${isSelected ? 'active' : ''}"
-                        data-branch="${safeB}"
-                        onclick="handleSelectBranch('${safeB}')">
-                    ${isSelected ? '✓ Selected' : '⊕ Select Branch'}
-                </button>
-            </div>
-        `, { maxWidth: 290 });
+            </div>`;
 
-        /* clicking the marker dot also selects it */
-        marker.on('click', () => handleSelectBranch(branch));
+        marker.bindTooltip(tipHtml, {
+            direction:  'top',
+            offset:     [0, -8],
+            opacity:    1,
+            permanent:  false,   // shows on hover; click makes it sticky below
+            className:  ''
+        });
+
+        /* ── Click: select branch + open sticky tooltip ── */
+        marker.on('click', function (e) {
+            L.DomEvent.stopPropagation(e);   // prevent map click from firing deselect
+            selectBranch(branch);
+
+            // Open the tooltip and keep it visible
+            marker.openTooltip();
+        });
 
         marker.addTo(layer);
         bounds.push([lat, lng]);
         markerRegistry[branch] = markerEl;
     });
 
-    document.getElementById('okCount').innerText    = okCount;
-    document.getElementById('alertCount').innerText = alertCount;
-
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
-}
-
-/* ======================================================
-   HELPERS
-====================================================== */
-function money(v) {
-    return new Intl.NumberFormat('en-LK', {
-        style: 'currency', currency: 'LKR', maximumFractionDigits: 0
-    }).format(v);
 }
 
 /* ======================================================
@@ -517,14 +428,8 @@ async function update() {
 window.onload = function () {
     tableau.extensions.initializeAsync()
         .then(() => {
-            /*
-             * Viz extensions use worksheetContent — NOT dashboardContent.
-             * Parameters on a viz extension are accessed via the worksheet,
-             * not the dashboard object.
-             */
             worksheet = tableau.extensions.worksheetContent.worksheet;
-
-            console.log('Extension initialised on worksheet:', worksheet.name);
+            console.log('Extension on worksheet:', worksheet.name);
 
             initMap();
 
@@ -537,7 +442,7 @@ window.onload = function () {
         })
         .catch(err => {
             console.error('Init error:', err);
-            showToast('Could not initialise: ' + (err.message || String(err)));
+            showToast('Init failed: ' + (err.message || String(err)));
         });
 };
 
