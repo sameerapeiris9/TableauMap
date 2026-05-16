@@ -261,9 +261,9 @@ function showToast(msg, type = 'error') {
    SET PARAMETER
    
    Viz extensions run INSIDE a worksheet zone.
-   Parameters live on the worksheet itself — accessed via
-   worksheet.getParametersAsync() / worksheet.changeParameterValueAsync()
-   NOT via dashboardContent (that's for dashboard extensions).
+   Parameters are fetched via worksheet.getParametersAsync(),
+   but changed via param.changeValueAsync() on the parameter object.
+   Do NOT use worksheet.changeParameterValueAsync() — it doesn't exist.
 ====================================================== */
 async function setParameter(branchName) {
     try {
@@ -284,8 +284,8 @@ async function setParameter(branchName) {
             return;
         }
 
-        /* ── Step 3: change the value ── */
-        await worksheet.changeParameterValueAsync(PARAM_NAME, branchName);
+        /* ── Step 3: change the value via the param object ── */
+        await param.changeValueAsync(branchName);
 
         console.log(`✓ "${PARAM_NAME}" set to "${branchName}"`);
 
